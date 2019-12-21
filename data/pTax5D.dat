@@ -1,0 +1,90 @@
+# pTax5Dncl5.dat
+# 15 Apr 2019: created for real tax distribution.
+
+data;
+
+let na := 12;
+let nb := 3;
+let nc := 3;
+let nd := 2;
+let ne := 2;
+
+# include dims.dat;
+
+# Set up wage dimension intervals
+# let wmin := 2;
+# let wmax := 4;
+# let {i in A}  w[i]   := wmin + ((wmax-wmin)/(na-1))*(i-1);
+
+data;
+
+param  w := 
+  1   6.30
+  2   8.05 
+  3   10.20 
+  4   12.90 
+  5   16.30
+  6   20.70
+  7   26.20
+  8   33.10
+  9   41.90
+  10  53.00
+  11  67.15
+  12  85.00 ;
+
+param  mu :=
+    1   0.5
+    2   1
+    3   2 ;
+
+# Define mu1
+let {j in B} mu1[j] := mu[j] + 1;
+
+data;
+
+param alpha :=
+    1   0
+    2   1
+    3   1.5;
+
+param psi :=
+    1   1
+    2   1.5;
+
+param gamma :=
+    1   2
+    2   3;
+
+# Set up 5 dimensional distribution
+# let {(i,j,k,g,h) in T} lambda[i,j,k,g,h] := 1;
+
+data;
+
+param  lambda0 := 
+  1   26
+  2   40 
+  3   49 
+  4   46 
+  5   45
+  6   41
+  7   35
+  8   22
+  9   14
+  10  7
+  11  3
+  12  2 ;
+
+
+let {(i,j,k,g,h) in T} lambda[i,j,k,g,h] := lambda0[i];
+
+# Choose a reasonable epsilon
+let epsilon := 0.1;
+
+# let {(i,j,k,g,h) in T} l_star[i,j,k,g,h] := 1;
+# let {(i,j,k,g,h) in T} c_star[i,j,k,g,h] := l_star[i,j,k,g,h]*w[i];
+
+# let {(i,j,k,g,h) in T}      c[i,j,k,g,h] := c_star[i,j,k,g,h];
+# let {(i,j,k,g,h) in T}      y[i,j,k,g,h] := c_star[i,j,k,g,h];
+
+# read improve starting point
+data; commands "RealWage/5D/p5Dinitial_12.dat";

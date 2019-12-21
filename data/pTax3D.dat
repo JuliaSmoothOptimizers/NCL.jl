@@ -1,0 +1,86 @@
+data;
+
+let na := 12;
+let nb := 3;
+let nc := 3;
+
+# include dims.dat;
+
+# # Set up wage dimension intervals
+#let wmin := 2;
+#let wmax := 4;
+#let {i in A}  w[i]   := wmin + ((wmax-wmin)/(na-1))*(i-1);
+
+data;
+
+param  w :=
+  1   6.30
+  2   8.05
+  3   10.20
+  4   12.90
+  5   16.30
+  6   20.70
+  7   26.20
+  8   33.10
+  9   41.90
+  10  53.00
+  11  67.15
+  12  85.00 ;
+
+
+
+# Set up eta dimension intervals
+# let {j in B} mu[j] := j;   # 1 2 3 5 8;
+# let mu[4] := 5;
+# let mu[5] := 8;
+
+data;
+
+param  mu :=
+    1   0.5
+    2   1
+    3   2 ;
+
+# Define mu1
+let {j in B} mu1[j] := mu[j] + 1;
+
+data;
+
+param alpha :=
+    1   0
+    2   1
+    3   1.5;
+
+# Set up 3 dimensional distribution
+
+data;
+
+param  lambda0 :=
+  1   26
+  2   40
+  3   49
+  4   46
+  5   45
+  6   41
+  7   35
+  8   22
+  9   14
+  10  7
+  11  3
+  12  2 ;
+
+
+let {i in A, j in B, k in C} lambda[i,j,k] := lambda0[i];
+
+# Choose a reasonable epsilon
+let epsilon := 0.1;
+
+# let {i in A, j in B, k in C} l_star[i,j,k] := 1;
+# let {i in A, j in B, k in C} c_star[i,j,k] := l_star[i,j,k]*w[i];
+
+# let {i in A, j in B, k in C}      c[i,j,k] := c_star[i,j,k];
+# let {i in A, j in B, k in C}      y[i,j,k] := c_star[i,j,k];
+
+# data; var include 3Dinitial.dat;
+
+data; commands "p3Dinitial_12.dat";

@@ -1,0 +1,84 @@
+# tax2D.dat
+
+# 01 Aug 2017: Put sensible lower bounds on c, y.
+# 11 Aug 2017: Define mu1[j] = mu[j] + 1.
+# 08 Apr 2019: Real wage distribution adopted.
+
+
+data;
+
+let na := 12;
+let nb := 5;
+
+## Set up wage dimension intervals
+#let wmin := 1;
+#let wmax := 5;
+#let wmax := wain + na - 1;
+#let {i in A} w[i] := wmin + ((wmax-wmin)/(na-1))*(i-1);
+
+data;
+
+param  w := 
+  1   6.30
+  2   8.05 
+  3   10.20 
+  4   12.90 
+  5   16.30
+  6   20.70
+  7   26.20
+  8   33.10
+  9   41.90
+  10  53.00
+  11  67.15
+  12  85.00 ;
+
+
+# Set up eta dimension intervals
+
+# let {j in B} mu[j] := j;   # 1 2 3 5 8;
+# let mu[4] := 5;
+# let mu[5] := 8;
+
+data;
+
+param  mu := 
+  1   1
+  2   2 
+  3   3 
+  4   5 
+  5   8 ;
+
+# Define mu1
+let {j in B} mu1[j] := mu[j] + 1;
+
+# Set up 2 dimensional distribution
+
+data;
+
+param  lambda0 := 
+  1   26
+  2   40 
+  3   49 
+  4   46 
+  5   45
+  6   41
+  7   35
+  8   22
+  9   14
+  10  7
+  11  3
+  12  2 ;
+
+
+let {i in A, j in B} lambda[i,j] := lambda0[i]; 
+
+let {i in A, j in B} l_star[i,j] := 1;
+let {i in A, j in B} c_star[i,j] := l_star[i,j]*w[i];
+
+let {i in A, j in B}      c[i,j] := c_star[i,j];
+let {i in A, j in B}      y[i,j] := c_star[i,j];
+
+# The following gives realistic lower bounds
+# but we try to get by without them.
+#let {i in A, j in B}    clb[i,j] := 0.4*c_star[i,j];
+#let {i in A, j in B}    ylb[i,j] := 0.4*c_star[i,j];
