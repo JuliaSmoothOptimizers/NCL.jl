@@ -12,4 +12,4 @@ makedocs(
               "Reference" => "reference.md"]
 )
 
-deploydocs(repo = "github.com/JuliaSmoothOptimizers/NCL.jl.git")
+deploydocs(repo = "github.com/JuliaSmoothOptimizers/NCL.jl.git", devbranch = "main")
