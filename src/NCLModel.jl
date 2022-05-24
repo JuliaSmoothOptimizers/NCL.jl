@@ -37,26 +37,26 @@ where λ is a vector of Lagrange multiplier estimates and ρ > 0 is a penalty pa
 
 * `ncl::NCLModel`  the transformed model.
 """
-mutable struct NCLModel <: AbstractNLPModel
-  nlp::AbstractNLPModel
+mutable struct NCLModel{T, S, M} <: AbstractNLPModel{T, S} where M <: AbstractNLPModel{T, S}
+  nlp::M
   nx::Int  # number of variables in nlp
   nr::Int  # number of residuals in nlp problem (nr = length(nlp.meta.nln))
   resid_linear::Bool
 
-  meta::AbstractNLPModelMeta
+  meta::NLPModelMeta{T, S}
   counters::Counters
 
-  y::Vector{<:AbstractFloat}
-  ρ::Float64  # penalty parameter
+  y::S
+  ρ::T # penalty parameter
 end
 
 # constructor
-function NCLModel(nlp::AbstractNLPModel;
-                  resid::Float64 = 0.,
+function NCLModel(nlp::AbstractNLPModel{T, S};
+                  resid::T = zero(T),
                   resid_linear::Bool = true,
-                  ρ::Float64 = 1.,
-                  y::AbstractVector{<:AbstractFloat} = ones(Float64, resid_linear ? nlp.meta.ncon : nlp.meta.nnln),
-                 )
+                  ρ::T = one(T),
+                  y::S = fill!(similar(nlp.meta.x0, resid_linear ? nlp.meta.ncon : nlp.meta.nnln), 1),
+                  ) where {T, S}
 
   if (nlp.meta.ncon == 0)
     @warn("input problem $(nlp.meta.name) is unconstrained, not generating NCL model")
@@ -72,37 +72,37 @@ function NCLModel(nlp::AbstractNLPModel;
   # construct meta
   nx = nlp.meta.nvar
   nvar = nx + nr
-  meta = NLPModelMeta(nvar;
-                      lvar = vcat(nlp.meta.lvar, fill!(Vector{Float64}(undef, nr), -Inf)),  # no bounds on residuals
-                      uvar = vcat(nlp.meta.uvar, fill!(Vector{Float64}(undef, nr), Inf)),
-                      x0   = vcat(nlp.meta.x0, fill!(Vector{Float64}(undef, nr), resid)),
-                      y0   = nlp.meta.y0,
-                      name = "NCL-" * nlp.meta.name,
-                      nnzj = nlp.meta.nnzj + nr,
-                      nnzh = nlp.meta.nnzh + nr,
-                      ncon = nlp.meta.ncon,
-                      lcon = nlp.meta.lcon,
-                      ucon = nlp.meta.ucon,
-                      minimize = true,  # nlp.meta.minimize,
-                      # TODO: define nln, etc.
-                     )
+  meta = NLPModelMeta{T, S}(nvar;
+                            lvar = vcat(nlp.meta.lvar, fill!(similar(nlp.meta.x0, nr), -Inf)),  # no bounds on residuals
+                            uvar = vcat(nlp.meta.uvar, fill!(similar(nlp.meta.x0, nr), Inf)),
+                            x0   = vcat(nlp.meta.x0, fill!(similar(nlp.meta.x0, nr), resid)),
+                            y0   = nlp.meta.y0,
+                            name = "NCL-" * nlp.meta.name,
+                            nnzj = nlp.meta.nnzj + nr,
+                            nnzh = nlp.meta.nnzh + nr,
+                            ncon = nlp.meta.ncon,
+                            lcon = nlp.meta.lcon,
+                            ucon = nlp.meta.ucon,
+                            minimize = true,  # nlp.meta.minimize,
+                            # TODO: define nln, etc.
+                          )
 
   nlp.meta.minimize || error("only minimization problems are currently supported")
-  return NCLModel(nlp, nx, nr, resid_linear, meta, Counters(), y, ρ)
+  return NCLModel{T, S, typeof(nlp)}(nlp, nx, nr, resid_linear, meta, Counters(), y, ρ)
 end
 
-function NLPModels.obj(ncl::NCLModel, xr::AbstractVector{<:AbstractFloat})
+function NLPModels.obj(ncl::NCLModel{T, S, M}, xr::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_obj)
   x = view(xr, 1 : ncl.nx)
   r = view(xr, ncl.nx + 1 : ncl.nx + ncl.nr)
   obj_val = obj(ncl.nlp, x)
   ncl.nlp.meta.minimize || (obj_val *= -1)
-  obj_res = ncl.y' * r + 0.5 * ncl.ρ * dot(r, r)
+  obj_res = ncl.y' * r + ncl.ρ * dot(r, r) / 2
   # ncl.meta.minimize || (obj_res *= -1)
   return obj_val + obj_res
 end
 
-function NLPModels.grad!(ncl::NCLModel, xr::AbstractVector{<:AbstractFloat}, gx::AbstractVector{<:AbstractFloat})
+function NLPModels.grad!(ncl::NCLModel{T, S, M}, xr::S, gx::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_grad)
   x = view(xr, 1 : ncl.nx)
   grad!(ncl.nlp, x, gx)
@@ -113,7 +113,7 @@ function NLPModels.grad!(ncl::NCLModel, xr::AbstractVector{<:AbstractFloat}, gx:
   return gx
 end
 
-function NLPModels.hess_structure!(ncl::NCLModel, hrows::AbstractVector{<:Integer}, hcols::AbstractVector{<:Integer})
+function NLPModels.hess_structure!(ncl::NCLModel{T, S, M}, hrows::AbstractVector{<:Integer}, hcols::AbstractVector{<:Integer}) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hess)
   hess_structure!(ncl.nlp, hrows, hcols)
   orig_nnzh = ncl.nlp.meta.nnzh
@@ -123,7 +123,7 @@ function NLPModels.hess_structure!(ncl::NCLModel, hrows::AbstractVector{<:Intege
   return (hrows, hcols)
 end
 
-function NLPModels.hess_coord!(ncl::NCLModel, xr::AbstractVector, vals::AbstractVector; obj_weight::Float64=1.0)
+function NLPModels.hess_coord!(ncl::NCLModel{T, S, M}, xr::S, vals::S; obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hess)
   nnzh = ncl.meta.nnzh
   orig_nnzh = ncl.nlp.meta.nnzh
@@ -139,11 +139,11 @@ function NLPModels.hess_coord!(ncl::NCLModel, xr::AbstractVector, vals::Abstract
   return hvals
 end
 
-function NLPModels.hess_coord!(ncl::NCLModel,
-                               xr::AbstractVector{<:AbstractFloat},
-                               y :: AbstractVector{<:AbstractFloat},
-                               hvals::AbstractVector{<:AbstractFloat};
-                               obj_weight :: Float64=1.0)
+function NLPModels.hess_coord!(ncl::NCLModel{T, S, M},
+                               xr::S,
+                               y :: S,
+                               hvals::S;
+                               obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hess)
   nnzh = ncl.meta.nnzh
   orig_nnzh = ncl.nlp.meta.nnzh
@@ -159,11 +159,11 @@ function NLPModels.hess_coord!(ncl::NCLModel,
   return hvals
 end
 
-function NLPModels.hprod!(ncl::NCLModel,
-                          xr::AbstractVector{<:AbstractFloat},
-                          v::AbstractVector{<:AbstractFloat},
-                          hv::AbstractVector{<:AbstractFloat};
-                          obj_weight :: Float64=1.0)
+function NLPModels.hprod!(ncl::NCLModel{T, S, M},
+                          xr::S,
+                          v::S,
+                          hv::S;
+                          obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hprod)
   x = view(xr, 1 : ncl.nx)
   hprod!(ncl.nlp, x, view(v, 1 : ncl.nx), hv; obj_weight=obj_weight)
@@ -177,12 +177,12 @@ function NLPModels.hprod!(ncl::NCLModel,
   return hv
 end
 
-function NLPModels.hprod!(ncl::NCLModel,
-                          xr::AbstractVector{<:AbstractFloat},
-                          y :: AbstractVector{<:AbstractFloat},
-                          v::AbstractVector{<:AbstractFloat},
-                          hv::AbstractVector{<:AbstractFloat};
-                          obj_weight :: Float64=1.0)
+function NLPModels.hprod!(ncl::NCLModel{T, S, M},
+                          xr::S,
+                          y::S,
+                          v::S,
+                          hv::S;
+                          obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hprod)
   x = view(xr, 1 : ncl.nx)
   hprod!(ncl.nlp, x, y, view(v, 1 : ncl.nx), hv; obj_weight=obj_weight)
@@ -196,7 +196,7 @@ function NLPModels.hprod!(ncl::NCLModel,
   return hv
 end
 
-function NLPModels.cons!(ncl::NCLModel, xr::AbstractVector{<:AbstractFloat}, cx::AbstractVector{<:AbstractFloat})
+function NLPModels.cons!(ncl::NCLModel{T, S, M}, xr::S, cx::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_cons)
   x = view(xr, 1 : ncl.nx)
   cons!(ncl.nlp, x, cx)
@@ -210,7 +210,7 @@ function NLPModels.cons!(ncl::NCLModel, xr::AbstractVector{<:AbstractFloat}, cx:
   return cx
 end
 
-function NLPModels.jac_structure!(ncl::NCLModel, jrows::AbstractVector{<:Integer}, jcols::AbstractVector{<:Integer})
+function NLPModels.jac_structure!(ncl::NCLModel{T, S, M}, jrows::AbstractVector{<:Integer}, jcols::AbstractVector{<:Integer}) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jac)
   jac_structure!(ncl.nlp, jrows, jcols)
   orig_nnzj = ncl.nlp.meta.nnzj
@@ -220,9 +220,9 @@ function NLPModels.jac_structure!(ncl::NCLModel, jrows::AbstractVector{<:Integer
   return jrows, jcols
 end
 
-function NLPModels.jac_coord!(ncl::NCLModel,
-                              xr::AbstractVector{<:AbstractFloat},
-                              jvals::AbstractVector{<:AbstractFloat})
+function NLPModels.jac_coord!(ncl::NCLModel{T, S, M},
+                              xr::S,
+                              jvals::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jac)
   x = view(xr, 1 : ncl.nx)
   jac_coord!(ncl.nlp, x, jvals)
@@ -230,10 +230,10 @@ function NLPModels.jac_coord!(ncl::NCLModel,
   return jvals
 end
 
-function NLPModels.jprod!(ncl::NCLModel,
-                          xr::AbstractVector{<:AbstractFloat},
-                          v::AbstractVector{<:AbstractFloat},
-                          Jv::AbstractVector{<:AbstractFloat})
+function NLPModels.jprod!(ncl::NCLModel{T, S, M},
+                          xr::S,
+                          v::S,
+                          Jv::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jprod)
   x = view(xr, 1 : ncl.nx)
   vx = view(v, 1 : ncl.nx)
@@ -249,10 +249,10 @@ function NLPModels.jprod!(ncl::NCLModel,
   return Jv
 end
 
-function NLPModels.jtprod!(ncl::NCLModel,
-                           xr::AbstractVector{<:AbstractFloat},
-                           v::AbstractVector{<:AbstractFloat},
-                           Jtv::AbstractVector{<:AbstractFloat})
+function NLPModels.jtprod!(ncl::NCLModel{T, S, M},
+                           xr::S,
+                           v::S,
+                           Jtv::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jtprod)
   x = view(xr, 1 : ncl.nx)
   jtprod!(ncl.nlp, x, v, Jtv)
