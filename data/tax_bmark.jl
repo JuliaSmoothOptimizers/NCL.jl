@@ -30,7 +30,7 @@ include("../src/NCL.jl")
 #                       )
 
 probnames = ["tax1D", "tax2D", "pTax3D", "pTax4D", "pTax5D"]
-problems = (AmplModel(probname) for probname in probnames)
+problems = (AmplModel(joinpath(@__DIR__, "$(probname).nl")) for probname in probnames)
 
 solvers = Dict{Symbol,Function}(
                # :ipopt => prob -> ipopt(prob; ipopt_options...),
