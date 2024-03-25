@@ -7,6 +7,7 @@ using Printf
 
 using NLPModels
 using SolverTools
+using KNITRO
 using NLPModelsIpopt
 using NLPModelsKnitro
 

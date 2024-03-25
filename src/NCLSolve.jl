@@ -4,6 +4,7 @@ const ipopt_fixed_options = Dict(:sb => "yes",  # options that are always used
                                  :print_level => 0,
                                  :max_iter => 100,
                                  )
+
 const knitro_fixed_options = Dict(:algorithm => 1,
                                   :bar_directinterval => 0,
                                   :bar_initpt => 2,
@@ -18,7 +19,7 @@ function NCLSolve(ncl::NCLModel;
                   opt_tol::Float64=1.0e-6,
                   feas_tol::Float64=1.0e-6,
                   max_iter_NCL::Int = 20,
-                  solver = :ipopt,
+                  solver = KNITRO.has_knitro() ? :knitro : :ipopt,
                   kwargs...  # will be passed directly to inner solver
                  )
 
@@ -60,6 +61,7 @@ function NCLSolve(ncl::NCLModel;
     ipopt_options = Dict{Symbol,Any}(:dual_inf_tol => ω,     # leave these at the initial ω value
                                      :constr_viol_tol => ω,
                                     );
+
     knitro_options = Dict{Symbol,Any}(#:opttol_abs => ω,  # for some reason this doesn't work?!?!?
                                       #:feastol_abs => ω,
                                      );
@@ -96,7 +98,7 @@ function NCLSolve(ncl::NCLModel;
           ipopt_options[:zL0] = inner_stats.solver_specific[:multipliers_L]
           ipopt_options[:zU0] = inner_stats.solver_specific[:multipliers_U]
 
-        else
+        elseif solver == :knitro
 
           if k == 2
             mu_init = 1e-3
@@ -129,6 +131,8 @@ function NCLSolve(ncl::NCLModel;
           # warm-starting multipliers doesn't seem to help KNITRO
           # knitro_options[:y0] = inner_stats.solver_specific[:multipliers_con]
           # knitro_options[:z0] = inner_stats.solver_specific[:multipliers_L]
+        else
+          error("The solver $solver is not supported.")
         end
 
         inner_stats.status == :first_order || @warn "inner solver returns with status" inner_stats.status
