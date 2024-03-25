@@ -4,10 +4,23 @@ authors = ["Dominique Orban <dominique.orban@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+KNITRO = "67920dd8-b58e-52a8-8622-53c4cffbe346"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 NLPModelsIpopt = "f4238b75-b362-5c4c-b852-0801c9a21d71"
 NLPModelsKnitro = "bec4dd0d-7755-52d5-9a02-22f0ffc7efcb"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SolverTools = "b5612192-2639-5dc1-abfe-fbedd65fab29"
+
+[compat]
+julia = "1.6"
+KNITRO = "0.14"
+NLPModels = "0.20"
+NLPModelsIpopt = "0.10.1"
+NLPModelsKnitro = "0.9"
+
+[extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
