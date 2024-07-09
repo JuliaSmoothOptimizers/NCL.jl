@@ -127,7 +127,7 @@ function NLPModels.hess_structure!(ncl::NCLModel{T,S,M}, hrows::AbstractVector{<
   return (hrows, hcols)
 end
 
-function NLPModels.hess_coord!(ncl::NCLModel{T, S, M}, xr::S, vals::S; obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
+function NLPModels.hess_coord!(ncl::NCLModel{T, S, M}, xr::S, hvals::S; obj_weight::T = one(T)) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_hess)
   nnzh = ncl.meta.nnzh
   orig_nnzh = ncl.nlp.meta.nnzh
