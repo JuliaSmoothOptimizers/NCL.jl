@@ -6,7 +6,7 @@ using LinearAlgebra
 using Printf
 
 using NLPModels
-using SolverTools
+using SolverCore
 using KNITRO
 using NLPModelsIpopt
 using NLPModelsKnitro
