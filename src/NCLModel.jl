@@ -264,7 +264,8 @@ function NLPModels.jtprod!(ncl::NCLModel{T, S, M},
                            Jtv::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jtprod)
   x = view(xr, 1 : ncl.nx)
-  jtprod!(ncl.nlp, x, v, Jtv)
+  orig_Jtv = view(Jtv, 1:ncl.nx)
+  jtprod!(ncl.nlp, x, v, orig_Jtv)
   Jtv[ncl.nx + 1 : ncl.meta.nvar] .= (ncl.resid_linear) ? v : v[ncl.nlp.meta.nln]
   return Jtv
 end
