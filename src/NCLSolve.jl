@@ -12,6 +12,8 @@ const knitro_fixed_options = Dict(:algorithm => 1,
                                   :maxit => 100,
                                   )
 
+
+# TODO: avoid infinite loop due to NCLModel not being generated
 NCLSolve(nlp::AbstractNLPModel, args...; kwargs...) = NCLSolve(NCLModel(nlp), args...; kwargs...)
 
 
@@ -19,9 +21,10 @@ function NCLSolve(ncl::NCLModel;
                   opt_tol::Float64=1.0e-6,
                   feas_tol::Float64=1.0e-6,
                   max_iter_NCL::Int = 20,
-                  solver = KNITRO.has_knitro() ? :knitro : :ipopt,
+                  solver = (:knitro in available_solvers) ? :knitro : :ipopt,
                   kwargs...  # will be passed directly to inner solver
                  )
+    _check_available_solver(solver)
 
     nx = ncl.nx
     nr = ncl.nr
