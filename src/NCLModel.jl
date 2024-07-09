@@ -11,12 +11,14 @@ Subtype of `AbstractNLPModel` designed to represent an NCL subproblem.
 A general problem of the form
 
     minimize   f(x)
+    over       x
     subject to lvar ≤ x ≤ uvar
                lcon ≤ c(x) ≤ ucon
 
 is transformed into
 
-    mininmize  f(x) + λ'r + ρ ‖r‖²
+    minimize   f(x) + λ'r + ρ ‖r‖²
+    over       x, r
     subject to lvar ≤ x ≤ uvar
                lcon ≤ c(x) + r ≤ ucon
 
@@ -62,7 +64,7 @@ function NCLModel(nlp::AbstractNLPModel{T, S};
     @warn("input problem $(nlp.meta.name) is unconstrained, not generating NCL model")
     return nlp
   elseif ((nlp.meta.nnln == 0) & !resid_linear)
-    @warn("input problem $(nlp.meta.name) is linearly constrained and `resid_linear` is `false`, snot generating NCL model")
+    @warn("input problem $(nlp.meta.name) is linearly constrained and `resid_linear` is `false`, not generating NCL model")
     return nlp
   end
 
@@ -202,7 +204,7 @@ function NLPModels.hprod!(ncl::NCLModel{T, S, M},
   return hv
 end
 
-function NLPModels.cons!(ncl::NCLModel{T, S, M}, xr::S, cx::S) where {T, S, M <: AbstractNLPModel{T, S}}
+function NLPModels.cons!(ncl::NCLModel{T, S, M}, xr::AbstractVector, cx::AbstractVector) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_cons)
   x = view(xr, 1 : ncl.nx)
   cons!(ncl.nlp, x, cx)
@@ -228,8 +230,8 @@ function NLPModels.jac_structure!(ncl::NCLModel{T, S, M}, jrows::AbstractVector{
 end
 
 function NLPModels.jac_coord!(ncl::NCLModel{T, S, M},
-                              xr::S,
-                              jvals::S) where {T, S, M <: AbstractNLPModel{T, S}}
+  xr::AbstractVector,
+  jvals::AbstractVector) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_jac)
   orig_nnzj = ncl.nlp.meta.nnzj
   orig_jvals = view(jvals, 1 : orig_nnzj)
