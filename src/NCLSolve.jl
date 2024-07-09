@@ -66,7 +66,10 @@ function NCLSolve(ncl::NCLModel;
                                       #:feastol_abs => ω,
                                      );
 
-    local inner_stats, z, zL, zU
+    local inner_stats, z
+    if has_bounds(ncl.nlp)
+      local zL, zU
+    end
 
     while !(converged || tired)
         k += 1
@@ -94,9 +97,11 @@ function NCLSolve(ncl::NCLModel;
                               kwargs...)
 
           # warm-starting multipliers appears to help IPOPT
-          ipopt_options[:y0]  = inner_stats.solver_specific[:multipliers_con]
-          ipopt_options[:zL0] = inner_stats.solver_specific[:multipliers_L]
-          ipopt_options[:zU0] = inner_stats.solver_specific[:multipliers_U]
+          ipopt_options[:y0] = inner_stats.multipliers
+          if has_bounds(ncl.nlp)
+            ipopt_options[:zL0] = inner_stats.multipliers_L
+            ipopt_options[:zU0] = inner_stats.multipliers_U
+          end
 
         elseif solver == :knitro
 
@@ -129,8 +134,8 @@ function NCLSolve(ncl::NCLModel;
                                kwargs...)
 
           # warm-starting multipliers doesn't seem to help KNITRO
-          # knitro_options[:y0] = inner_stats.solver_specific[:multipliers_con]
-          # knitro_options[:z0] = inner_stats.solver_specific[:multipliers_L]
+          # knitro_options[:y0] = inner_stats.multipliers
+          # knitro_options[:z0] = inner_stats.multipliers_L
         else
           error("The solver $solver is not supported.")
         end
@@ -176,24 +181,28 @@ function NCLSolve(ncl::NCLModel;
     end
     dual_feas = inner_stats.dual_feas
     primal_feas = η
-    zL = inner_stats.solver_specific[:multipliers_L][1:nx]
-    # zU = inner_stats.solver_specific[:multipliers_U][1:nx]  # doesn't work with KNITRO
-    zU = inner_stats.solver_specific[:multipliers_U]
+    if has_bounds(ncl.nlp)
+      zL = inner_stats.multipliers_L[1:nx]
+      zU = inner_stats.multipliers_U[1:nx]
+    end
 
-    return GenericExecutionStats(status, ncl,
-                                 solution = x,
-                                 iter = iter_count,
-                                 primal_feas = primal_feas,
-                                 dual_feas = dual_feas,
-                                 objective = obj(ncl.nlp, x),
-                                 elapsed_time = t,
-                                 #! doesn't work... counters = nlp.counters,
-                                 solver_specific = Dict(:multipliers_con => ncl.y,
-                                                        :multipliers_L => zL,
-                                                        :multipliers_U => zU,
-                                                        :internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
-                                                        :residuals => r
+  stats = GenericExecutionStats(ncl.nlp,
+                                status = status,
+                                solution = x,
+                                iter = iter_count,
+                                primal_feas = primal_feas,
+                                dual_feas = dual_feas,
+                                objective = obj(ncl.nlp, x),
+                                elapsed_time = t,
+                                multipliers = ncl.y,
+                                #! doesn't work... counters = nlp.counters,
+                                solver_specific = Dict(:internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
+                                                       :residuals => r
                                                       )
-                                )
+                               )
+  if has_bounds(ncl.nlp)
+    set_bounds_multipliers!(stats, zL, zU)
+  end
+  return stats
 
 end
