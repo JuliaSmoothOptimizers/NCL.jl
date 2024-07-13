@@ -107,7 +107,8 @@ end
 function NLPModels.grad!(ncl::NCLModel{T, S, M}, xr::S, gx::S) where {T, S, M <: AbstractNLPModel{T, S}}
   increment!(ncl, :neval_grad)
   x = view(xr, 1 : ncl.nx)
-  grad!(ncl.nlp, x, gx[1 : ncl.nx])
+  orig_gx = view(gx, 1 : ncl.nx)
+  grad!(ncl.nlp, x, orig_gx)
   ncl.nlp.meta.minimize || (gx[1 : ncl.nx] .*= -1)
   r = view(xr, ncl.nx + 1 : ncl.nx + ncl.nr)
   gx[ncl.nx + 1 : ncl.nx + ncl.nr] .= ncl.ρ * r .+ ncl.y
