@@ -32,11 +32,11 @@ include("../src/NCL.jl")
 probnames = ["tax1D", "tax2D", "pTax3D", "pTax4D", "pTax5D"]
 problems = (AmplModel(joinpath(@__DIR__, "$(probname).nl")) for probname in probnames)
 
-solvers = Dict{Symbol,Function}(
-               # :ipopt => prob -> ipopt(prob; ipopt_options...),
-               # :knitro => prob -> knitro(prob; knitro_options...),
-               :nclipopt => prob -> NCL.NCLSolve(prob, solver=:ipopt),
-               :nclknitro => prob -> NCL.NCLSolve(prob, solver=:knitro),
-               )
+solvers = Dict{Symbol, Function}(
+  # :ipopt => prob -> ipopt(prob; ipopt_options...),
+  # :knitro => prob -> knitro(prob; knitro_options...),
+  :nclipopt => prob -> NCL.NCLSolve(prob, solver = :ipopt),
+  :nclknitro => prob -> NCL.NCLSolve(prob, solver = :knitro),
+)
 
 stats = bmark_solvers(solvers, problems)
