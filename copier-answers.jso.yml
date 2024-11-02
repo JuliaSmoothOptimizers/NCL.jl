@@ -1,0 +1,8 @@
+PackageName: "NCL"
+PackageOwner: "JuliaSmoothOptimizers"
+PackageUUID: "af6b844e-5feb-47ff-8350-2ae20a94a0cf"
+_src_path: "https://github.com/JuliaSmoothOptimizers/JSOBestieTemplate.jl"
+_commit: "v0.13.0"
+AddBreakage: true
+AddBenchmark: false
+AddBenchmarkCI: true
