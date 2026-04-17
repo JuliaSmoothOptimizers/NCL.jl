@@ -15,13 +15,13 @@ end
 
 function _solve_ipopt(ncl::Any; kwargs...)
   error(
-    "Ipopt support is not loaded. Install and load NLPModelsIpopt.jl in your environment to use solver=:ipopt."
+    "Ipopt support is not loaded. Install and load NLPModelsIpopt.jl in your environment to use solver=:ipopt.",
   )
 end
 
 function _solve_knitro(ncl::Any; kwargs...)
   error(
-    "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use solver=:knitro."
+    "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use solver=:knitro.",
   )
 end
 
@@ -33,7 +33,7 @@ Return an error if `solver` is not in `NCL.available_solvers`
 function _check_available_solver(solver::Symbol)
   if isempty(available_solvers)
     error(
-      "No NCL inner solver is available. Load NLPModelsIpopt.jl and/or KNITRO.jl + NLPModelsKnitro.jl."
+      "No NCL inner solver is available. Load NLPModelsIpopt.jl and/or KNITRO.jl + NLPModelsKnitro.jl.",
     )
   end
 

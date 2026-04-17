@@ -16,7 +16,7 @@ function NCL._solve_knitro(ncl::NLPModels.AbstractNLPModel; kwargs...)
 
   error(
     "Knitro support is loaded, but Knitro is not available/configured. " *
-    "Please check that the Knitro binary is installed and that its license is configured."
+    "Please check that the Knitro binary is installed and that its license is configured.",
   )
 end
 
