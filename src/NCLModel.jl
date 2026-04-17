@@ -42,7 +42,7 @@ where λ is a vector of Lagrange multiplier estimates and ρ > 0 is a penalty pa
 mutable struct NCLModel{T, S, M} <: AbstractNLPModel{T, S} where {M <: AbstractNLPModel{T, S}}
   nlp::M
   nx::Int  # number of variables in nlp
-  nr::Int  # number of residuals in nlp problem (nr = length(get_nln(nlp)))
+  nr::Int  # number of residuals added in the NCL problem (get_ncon(nlp) if resid_linear, else get_nnln(nlp))
   resid_linear::Bool
 
   meta::NLPModelMeta{T, S}
@@ -63,7 +63,7 @@ function NCLModel(
   if (get_ncon(nlp) == 0)
     @warn("input problem $(get_name(nlp)) is unconstrained, not generating NCL model")
     return nlp
-  elseif ((get_nnln(nlp) == 0) & !resid_linear)
+  elseif ((get_nnln(nlp) == 0) && !resid_linear)
     @warn(
       "input problem $(get_name(nlp)) is linearly constrained and `resid_linear` is `false`, not generating NCL model"
     )
