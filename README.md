@@ -16,7 +16,7 @@ Any model complying with the [NLPModels](https://github.com/JuliaSmoothOptimizer
 The solver is still work in progress but is functional.
 A similar solver is available for tax problems only in the AMPL scripting language: <https://github.com/optimizers/ncl>.
 
-### References
+## References
 
 - D. Ma, Judd, K., Orban, D., & Saunders, M. (2018). [Stabilized optimization via an NCL algorithm](https://dx.doi.org/10.1007/978-3-319-90026-1_8). In M. Al-Baali, L. Grandinetti, & A. Purnama (Eds.), Numerical Analysis and Optimization (Vol. 235, pp. 173–191). Switzerland: Springer International Publishing.
 - Several talks by Michael A. Saunders: <https://stanford.edu/group/SOL/publications_talks.html>
