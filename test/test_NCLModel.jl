@@ -190,18 +190,16 @@ function test_NCLModel()
         @test jprod!(ncl_nlin_res, [1.0, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0], Jv) == [-1, -1, 1, 2]
       end
 
-      # FIXME
-      # @testset "NCLModel constraint jtprod()" begin
-      #   @test jtprod(ncl_nlin_res, [1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0]) == [5, 1, 0, 1]
-      #   @test jtprod(ncl_nlin_res, [1.0, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0]) == [2.5, 1, 2, 1]
-      # end
+      @testset "NCLModel constraint jtprod()" begin
+        @test jtprod(ncl_nlin_res, [1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0]) == [5, 0, 1, 1]
+        @test jtprod(ncl_nlin_res, [1.0, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0]) == [1.5, 0, 0, 1]
+      end
 
-      # FIXME
-      # @testset "NCLModel constraint jtprod!()" begin
-      #   @test jtprod!(ncl_nlin_res, [1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0], Jv) == [5, 0, 1, 1]
-      #   @test jtprod!(ncl_nlin_res, [1.0, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0], Jv) ==
-      #         [2.5, 2, 1, 1]
-      # end
+      @testset "NCLModel constraint jtprod!()" begin
+        @test jtprod!(ncl_nlin_res, [1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0], Jv) == [5, 0, 1, 1]
+        @test jtprod!(ncl_nlin_res, [1.0, 0.5, 1.0, 1.0], [0.0, 1.0, 0.0, 1.0], Jv) ==
+              [1.5, 0, 0, 1]
+      end
     end
   end
 
@@ -403,19 +401,63 @@ function test_NCLModel()
         ) == [1.5, 0, 0, 1, 0, 1]
       end
     end
+  end
 
-    @testset "NLPModelsTest tests, resid_linear = false" begin
-      g_errs = gradient_check(ncl_nlin_res, x = [1.0, -1.0, 1.0, -1.0])
-      @test length(g_errs) == 0
-      g_errs = gradient_check(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
-      @test length(g_errs) == 0
-    end
+  @testset "NLPModelsTest gradient check, resid_linear = false" begin
+    g_errs = gradient_check(ncl_nlin_res, x = [1.0, -1.0, 1.0, -1.0])
+    @test length(g_errs) == 0
+    g_errs = gradient_check(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
+    @test length(g_errs) == 0
+  end
 
-    @testset "NLPModelsTest tests, resid_linear = true" begin
-      g_errs = gradient_check(ncl_cons_res, x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
-      @test length(g_errs) == 0
-      g_errs = gradient_check(ncl_cons_res, x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
-      @test length(g_errs) == 0
+  @testset "NLPModelsTest Jacobian check, resid_linear = false" begin
+    j_errs = jacobian_check(ncl_nlin_res, x = [1.0, -1.0, 1.0, -1.0])
+    @test length(j_errs) == 0
+    k_errs = jacobian_check(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
+    @test length(j_errs) == 0
+  end
+
+  @testset "NLPModelsTest Hessian check, resid_linear = false" begin
+    h_errs = hessian_check_from_grad(ncl_nlin_res, x = [1.0, -1.0, 1.0, -1.0])
+    for k ∈ keys(h_errs)
+      @test length(h_errs[k]) == 0
     end
+    h_errs = hessian_check_from_grad(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
+    for k ∈ keys(h_errs)
+      @test length(h_errs[k]) == 0
+    end
+  end
+
+  @testset "NLPModelsTest gradient check, resid_linear = true" begin
+    g_errs = gradient_check(ncl_cons_res, x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
+    @test length(g_errs) == 0
+    g_errs = gradient_check(ncl_cons_res, x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
+    @test length(g_errs) == 0
+  end
+
+  @testset "NLPModelsTest Jacobian check, resid_linear = true" begin
+    j_errs = jacobian_check(ncl_cons_res, x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
+    @test length(j_errs) == 0
+    j_errs = jacobian_check(ncl_cons_res, x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
+    @test length(j_errs) == 0
+  end
+
+  @testset "NLPModelsTest Hessian check, resid_linear = true" begin
+    h_errs = hessian_check_from_grad(ncl_cons_res, x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
+    for k ∈ keys(h_errs)
+      @test length(h_errs[k]) == 0
+    end
+    h_errs = hessian_check_from_grad(ncl_cons_res, x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
+    for k ∈ keys(h_errs)
+      @test length(h_errs[k]) == 0
+    end
+  end
+
+  @testset "NLPModelsTest dimension check, resid_linear = false" begin
+    check_nlp_dimensions(ncl_nlin_res, linear_api = true)
+  end
+
+  @testset "NLPModelsTest dimension check, resid_linear = true" begin
+    check_nlp_dimensions(ncl_cons_res, linear_api = true)
   end
 end
