@@ -100,7 +100,7 @@ function NCLSolve(
         mu_init = 1e-8
       end
 
-      inner_stats = ipopt(
+      inner_stats = _solve_ipopt(
         ncl;
         x0 = xr,
         warm_start_init_point = k > 1 ? "yes" : "no",
@@ -141,7 +141,8 @@ function NCLSolve(
       knitro_options[:feastol] = ω
       knitro_options[:opttol_abs] = ω0
       knitro_options[:feastol_abs] = ω0
-      inner_stats = knitro(ncl; x0 = xr, knitro_fixed_options..., knitro_options..., kwargs...)
+      inner_stats =
+        _solve_knitro(ncl; x0 = xr, knitro_fixed_options..., knitro_options..., kwargs...)
 
       # warm-starting multipliers doesn't seem to help KNITRO
       # knitro_options[:y0] = inner_stats.multipliers
