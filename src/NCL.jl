@@ -13,13 +13,13 @@ function _register_solver!(solver::Symbol)
   return available_solvers
 end
 
-function _solve_ipopt(ncl::AbstractNLPModel; kwargs...)
+function _solve_ipopt(ncl::Any; kwargs...)
   error(
     "Ipopt support is not loaded. Install and load NLPModelsIpopt.jl in your environment to use solver=:ipopt."
   )
 end
 
-function _solve_knitro(ncl::AbstractNLPModel; kwargs...)
+function _solve_knitro(ncl::Any; kwargs...)
   error(
     "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use solver=:knitro."
   )
