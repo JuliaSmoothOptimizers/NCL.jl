@@ -413,7 +413,7 @@ function test_NCLModel()
   @testset "NLPModelsTest Jacobian check, resid_linear = false" begin
     j_errs = jacobian_check(ncl_nlin_res, x = [1.0, -1.0, 1.0, -1.0])
     @test length(j_errs) == 0
-    k_errs = jacobian_check(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
+    j_errs = jacobian_check(ncl_nlin_res, x = [1.0, 0.5, 0.0, 1.0])
     @test length(j_errs) == 0
   end
 
