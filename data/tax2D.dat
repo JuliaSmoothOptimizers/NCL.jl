@@ -18,11 +18,11 @@ let nb := 5;
 
 data;
 
-param  w := 
+param  w :=
   1   6.30
-  2   8.05 
-  3   10.20 
-  4   12.90 
+  2   8.05
+  3   10.20
+  4   12.90
   5   16.30
   6   20.70
   7   26.20
@@ -41,11 +41,11 @@ param  w :=
 
 data;
 
-param  mu := 
+param  mu :=
   1   1
-  2   2 
-  3   3 
-  4   5 
+  2   2
+  3   3
+  4   5
   5   8 ;
 
 # Define mu1
@@ -55,11 +55,11 @@ let {j in B} mu1[j] := mu[j] + 1;
 
 data;
 
-param  lambda0 := 
+param  lambda0 :=
   1   26
-  2   40 
-  3   49 
-  4   46 
+  2   40
+  3   49
+  4   46
   5   45
   6   41
   7   35
@@ -70,7 +70,7 @@ param  lambda0 :=
   12  2 ;
 
 
-let {i in A, j in B} lambda[i,j] := lambda0[i]; 
+let {i in A, j in B} lambda[i,j] := lambda0[i];
 
 let {i in A, j in B} l_star[i,j] := 1;
 let {i in A, j in B} c_star[i,j] := l_star[i,j]*w[i];

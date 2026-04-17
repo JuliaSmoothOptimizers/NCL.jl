@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier
+AddPrecommitUpdateCI: true
+Authors: Dominique Orban <dominique.orban@gmail.com>
+JuliaMinVersion: '1'
+License: MPL-2.0
+LicenseCopyrightHolders: Dominique Orban
+PackageName: NCL
+PackageOwner: JuliaSmoothOptimizers
+PackageUUID: af6b844e-5feb-47ff-8350-2ae20a94a0cf
+StrategyConfirmIncluded: false
+StrategyLevel: 2
+StrategyReviewExcluded: false
+_src_path: /Users/dpo/.julia/packages/BestieTemplate/6QVd6

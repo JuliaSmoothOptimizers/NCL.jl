@@ -1,10 +1,10 @@
-# pTax4D.mod	
+# pTax4D.mod
 #
 # 08 Dec 2016: 4D version created by D. Ma and M. A. Saunders.
-# 04 Jan 2017: Switch to piece-wise utility 
-# 12 Apr 2019: real wage distribution adopted. 	       
+# 04 Jan 2017: Switch to piece-wise utility
+# 12 Apr 2019: real wage distribution adopted.
 
- 
+
 # Define parameters for agents (taxpayers)
 param na;                # number of types in wage
 param nb;                # number of types in eta
@@ -22,19 +22,19 @@ param wmax;               # maximum wage level
 param w {A};              # wage vector
 param mu{B};              # mu = 1/eta# mu vector
 param mu1{B};             # mu1[j] = mu[j] + 1
-param alpha{C};           # ak vector for utility 
+param alpha{C};           # ak vector for utility
 param psi{D};             # g
 
 param lambda0{A};         # wage distribution
 param lambda {A, B, C, D};
 
-param l_star {A, B, C, D};   # zero tax wage solution 
+param l_star {A, B, C, D};   # zero tax wage solution
 param c_star {A, B, C, D};
-param epsilon; 
+param epsilon;
 param primreg     default 1e-8;  # Small primal regularization
 
 var c{(i,j,k,g) in T} >= 0.1;  # consumption for tax payer (i,j,k,g)
-var y{(i,j,k,g) in T} >= 0.1;  # income      for tax payer (i,j,k,g) 
+var y{(i,j,k,g) in T} >= 0.1;  # income      for tax payer (i,j,k,g)
 
 minimize f:
    sum{(i,j,k,g) in T}
@@ -52,7 +52,7 @@ minimize f:
             )
    + 0.5 * primreg * (c[i,j,k,g]^2 + y[i,j,k,g]^2)
    );
- 
+
 subject to
 
 Incentive {(i,j,k,g) in T, (p,q,r,s) in T:
@@ -79,5 +79,3 @@ Incentive {(i,j,k,g) in T, (p,q,r,s) in T:
 
 Technology:
    sum{(i,j,k,g) in T} lambda[i,j,k,g]*(y[i,j,k,g] - c[i,j,k,g]) >= 0;
-
-
