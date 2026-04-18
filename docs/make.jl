@@ -67,4 +67,4 @@ makedocs(;
   pages = list_pages(),
 )
 
-deploydocs(; repo = "github.com/JuliaSmoothOptimizers/NCL.jl")
+deploydocs(; repo = "github.com/JuliaSmoothOptimizers/NCL.jl", push_preview = true)
