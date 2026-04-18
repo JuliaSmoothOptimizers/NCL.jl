@@ -1,5 +1,3 @@
-# TODO: accept maximization problems
-
 import NLPModels: increment!
 
 export NCLModel
@@ -95,7 +93,7 @@ function NCLModel(
     ncon = get_ncon(nlp),
     lcon = get_lcon(nlp),
     ucon = get_ucon(nlp),
-    minimize = true,  # get_minimize(nlp)
+    minimize = true,
     islp = false,
     sparse_jacobian = get_sparse_jacobian(nlp),
     sparse_hessian = get_sparse_hessian(nlp),
@@ -107,7 +105,6 @@ function NCLModel(
     hprod_available = get_hprod_available(nlp),
   )
 
-  get_minimize(nlp) || error("only minimization problems are currently supported")
   return NCLModel{T, S, typeof(nlp)}(nlp, nx, nr, resid_linear, meta, Counters(), y, ρ)
 end
 
@@ -117,9 +114,8 @@ function NLPModels.obj(ncl::NCLModel{T, S, M}, xr::S) where {T, S, M <: Abstract
   x = view(xr, 1:(ncl.nx))
   r = view(xr, (ncl.nx + 1):(ncl.nx + ncl.nr))
   obj_val = obj(ncl.nlp, x)
-  get_minimize(ncl) || (obj_val *= -1)
+  get_minimize(ncl.nlp) || (obj_val *= -1)
   obj_res = ncl.y' * r + ncl.ρ * dot(r, r) / 2
-  # get_minimize(ncl) || (obj_res *= -1)
   return obj_val + obj_res
 end
 
@@ -133,10 +129,9 @@ function NLPModels.grad!(
   x = view(xr, 1:(ncl.nx))
   orig_gx = view(gx, 1:(ncl.nx))
   grad!(ncl.nlp, x, orig_gx)
-  get_minimize(ncl) || (gx[1:(ncl.nx)] .*= -1)
+  get_minimize(ncl.nlp) || (gx[1:(ncl.nx)] .*= -1)
   r = view(xr, (ncl.nx + 1):(ncl.nx + ncl.nr))
   gx[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= ncl.ρ * r .+ ncl.y
-  # get_minimize(ncl) || (gx[ncl.nx + 1 : ncl.nx + ncl.nr] .*= -1)
   return gx
 end
 
@@ -170,14 +165,9 @@ function NLPModels.hess_coord!(
   orig_nnzh = get_nnzh(ncl.nlp)
   x = view(xr, 1:(ncl.nx))
   orig_hvals = view(hvals, 1:orig_nnzh)
-  hess_coord!(ncl.nlp, x, orig_hvals; obj_weight = obj_weight)
-  # get_minimize(ncl) || (hvals[1:orig_nnzh] .*= -1)
+  inner_obj_weight = get_minimize(ncl.nlp) ? obj_weight : -obj_weight
+  hess_coord!(ncl.nlp, x, orig_hvals; obj_weight = inner_obj_weight)
   hvals[(orig_nnzh + 1):nnzh] .= ncl.ρ * obj_weight
-  # if get_minimize(ncl)
-  # hvals[(orig_nnzh + 1):nnzh] .= ncl.ρ
-  # else
-  #   hvals[orig_nnzh + 1 : nnzh] .= -ncl.ρ
-  # end
   return hvals
 end
 
@@ -196,14 +186,9 @@ function NLPModels.hess_coord!(
   orig_nnzh = get_nnzh(ncl.nlp)
   x = view(xr, 1:(ncl.nx))
   orig_hvals = view(hvals, 1:orig_nnzh)
-  hess_coord!(ncl.nlp, x, y, orig_hvals; obj_weight = obj_weight)
-  # get_minimize(ncl) || (hvals[1:orig_nnzh] .*= -1)
+  inner_obj_weight = get_minimize(ncl.nlp) ? obj_weight : -obj_weight
+  hess_coord!(ncl.nlp, x, y, orig_hvals; obj_weight = inner_obj_weight)
   hvals[(orig_nnzh + 1):nnzh] .= ncl.ρ * obj_weight
-  # if get_minimize(ncl)
-  # hvals[(orig_nnzh + 1):nnzh] .= ncl.ρ
-  # else
-  #   hvals[orig_nnzh + 1 : nnzh] .= -ncl.ρ
-  # end
   return hvals
 end
 
@@ -218,18 +203,13 @@ function NLPModels.hprod!(
   increment!(ncl, :neval_hprod)
   x = view(xr, 1:(ncl.nx))
   orig_hv = view(hv, 1:(ncl.nx))
-  hprod!(ncl.nlp, x, view(v, 1:(ncl.nx)), orig_hv; obj_weight = obj_weight)
-  # get_minimize(ncl) || (orig_hv .*= -1)
+  inner_obj_weight = get_minimize(ncl.nlp) ? obj_weight : -obj_weight
+  hprod!(ncl.nlp, x, view(v, 1:(ncl.nx)), orig_hv; obj_weight = inner_obj_weight)
   if obj_weight == zero(T)
     hv[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= 0
   else
     hv[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= obj_weight * ncl.ρ * v[(ncl.nx + 1):(ncl.nx + ncl.nr)]
   end
-  # if get_minimize(ncl)
-  # hv[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= ncl.ρ * v[(ncl.nx + 1):(ncl.nx + ncl.nr)]
-  # else
-  #   hv[ncl.nx + 1 : ncl.nx + ncl.nr] .= -ncl.ρ * v[ncl.nx + 1 : ncl.nx + ncl.nr]
-  # end
   return hv
 end
 
@@ -246,18 +226,13 @@ function NLPModels.hprod!(
   increment!(ncl, :neval_hprod)
   x = view(xr, 1:(ncl.nx))
   orig_hv = view(hv, 1:(ncl.nx))
-  hprod!(ncl.nlp, x, y, view(v, 1:(ncl.nx)), orig_hv; obj_weight = obj_weight)
-  # get_minimize(ncl) || (orig_hv .*= -1)
+  inner_obj_weight = get_minimize(ncl.nlp) ? obj_weight : -obj_weight
+  hprod!(ncl.nlp, x, y, view(v, 1:(ncl.nx)), orig_hv; obj_weight = inner_obj_weight)
   if obj_weight == zero(T)
     hv[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= 0
   else
     hv[(ncl.nx + 1):(ncl.nx + ncl.nr)] .= obj_weight * ncl.ρ * v[(ncl.nx + 1):(ncl.nx + ncl.nr)]
   end
-  # if get_minimize(ncl)
-  #   hv[ncl.nx + 1 : ncl.nx + ncl.nr] .= ncl.ρ * v[ncl.nx + 1 : ncl.nx + ncl.nr]
-  # else
-  #   hv[ncl.nx + 1 : ncl.nx + ncl.nr] .= -ncl.ρ * v[ncl.nx + 1 : ncl.nx + ncl.nr]
-  # end
   return hv
 end
 

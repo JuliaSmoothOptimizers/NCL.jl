@@ -34,6 +34,8 @@ function test_NCLModel()
 
   name = "Unit test problem"
   nlp::ADNLPModel = ADNLPModel(f, x0, lvar, uvar, A, c, lcon, ucon; name = name)
+  nlp_max::ADNLPModel =
+    ADNLPModel(f, x0, lvar, uvar, A, c, lcon, ucon; name = name * " (max)", minimize = false)
 
   ncl_nlin_res = NCLModel(nlp; resid = 1.0, resid_linear = false, y = [1.0, 1.0])
   ncl_nlin_res.y = y
@@ -41,6 +43,21 @@ function test_NCLModel()
 
   ncl_cons_res = NCLModel(nlp; resid = 1.0, resid_linear = true, y = [1.0, 1.0, 1.0, 1.0])
   ncl_cons_res.ρ = ρ
+
+  ncl_max = NCLModel(nlp_max; resid = 1.0, resid_linear = false, y = [1.0, 1.0])
+  ncl_max.y = y
+  ncl_max.ρ = ρ
+
+  @testset "NCLModel. Maximization input" begin
+    @test ncl_max.meta.minimize == true
+    @test obj(ncl_max, [0.5, 0.5, 0.0, -1.0]) == -1.0 - 1.0 + 0.5 * ρ * 1.0
+    @test grad(ncl_max, [0.5, 0.5, 0.0, -1.0]) == [-1.0, -1.0, 2.0, 1.0 - ρ]
+
+    h_errs = hessian_check_from_grad(ncl_max, x = [1.0, 0.5, 0.0, 1.0])
+    for k ∈ keys(h_errs)
+      @test length(h_errs[k]) == 0
+    end
+  end
 
   @testset "NCLModel. No linear residuals" begin
     @testset "NCLModel struct" begin
