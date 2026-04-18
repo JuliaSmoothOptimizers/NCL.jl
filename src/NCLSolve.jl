@@ -9,6 +9,7 @@ function NCLSolve(
   feas_tol::Float64 = 1.0e-6,
   max_iter_NCL::Int = 20,
   solver = (:knitro in available_solvers) ? :knitro : :ipopt,
+  verbose::Bool = true,
   kwargs...,  # will be passed directly to inner solver
 )
   _check_available_solver(solver)
@@ -38,21 +39,23 @@ function NCLSolve(
   y = ncl.meta.y0
   z = zeros(ncl.meta.nvar)
 
-  @info @sprintf(
-    "%5s  %5s  %9s  %7s  %7s  %7s  %7s  %7s  %7s  %7s  %7s  %6s",
-    "outer",
-    "inner",
-    "NCL obj",
-    "‖r‖",
-    "η",
-    "‖∇L‖",
-    "ω",
-    "ρ",
-    "μ init",
-    "‖y‖",
-    "‖x‖",
-    "time"
-  )
+  if verbose
+    @info @sprintf(
+      "%5s  %5s  %9s  %7s  %7s  %7s  %7s  %7s  %7s  %7s  %7s  %6s",
+      "outer",
+      "inner",
+      "NCL obj",
+      "‖r‖",
+      "η",
+      "‖∇L‖",
+      "ω",
+      "ρ",
+      "μ init",
+      "‖y‖",
+      "‖x‖",
+      "time"
+    )
+  end
 
   k = 0
   t = 0.0
@@ -154,21 +157,23 @@ function NCLSolve(
 
     iter_count += inner
 
-    @info @sprintf(
-      "%5d  %5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %6.2f",
-      k,
-      inner,
-      obj(ncl, xr),
-      rNorm,
-      η,
-      dual_feas,
-      ω,
-      ncl.ρ,
-      mu_init,
-      norm(ncl.y, Inf),
-      norm(x),
-      Δt
-    )
+    if verbose
+      @info @sprintf(
+        "%5d  %5d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e  %6.2f",
+        k,
+        inner,
+        obj(ncl, xr),
+        rNorm,
+        η,
+        dual_feas,
+        ω,
+        ncl.ρ,
+        mu_init,
+        norm(ncl.y, Inf),
+        norm(x),
+        Δt
+      )
+    end
 
     if rNorm ≤ max(η, feas_tol)
       ncl.y .+= ncl.ρ * r
