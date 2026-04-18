@@ -1,4 +1,11 @@
-export NCLSolve
+export AbstractNCLSubSolver, NCLSolve
+
+# abstract type for NCL subproblem solvers
+abstract type AbstractNCLSubSolver <: AbstractOptimizationSolver end
+name(sub::AbstractNCLSubSolver) = sub.name
+stats(sub::AbstractNCLSubSolver) = sub.stats
+mu_init(sub::AbstractNCLSubSolver) = sub.mu_init
+failed(stats::GenericExecutionStats) = stats.status != :first_order
 
 # TODO: avoid infinite loop due to NCLModel not being generated
 NCLSolve(nlp::AbstractNLPModel, args...; kwargs...) = NCLSolve(NCLModel(nlp), args...; kwargs...)
@@ -8,16 +15,17 @@ function NCLSolve(
   opt_tol::Float64 = 1.0e-6,
   feas_tol::Float64 = 1.0e-6,
   max_iter_NCL::Int = 20,
-  solver = (:knitro in available_solvers) ? :knitro : :ipopt,
+  subsolver::AbstractNCLSubSolver = IpoptNCLSubSolver(ncl),
   verbose::Bool = true,
   kwargs...,  # will be passed directly to inner solver
 )
-  _check_available_solver(solver)
+  @info "NCL: using subsolver $(name(subsolver))"
+
+  NLPModels.reset!(ncl.nlp)
+  NLPModels.reset!(ncl)
 
   nx = ncl.nx
   nr = ncl.nr
-
-  mu_init = 1.0e-1
 
   τ_ρ = 10  # factor by which we increase ρ on unsuccessful iterations
   τ_η = 10  # factor by which we decrease η on successful iterations
@@ -38,6 +46,12 @@ function NCLSolve(
   best_rNorm = rNorm
   y = ncl.meta.y0
   z = zeros(ncl.meta.nvar)
+
+  # Initialize multipliers in subsolver.stats.
+  # The subsolver uses these to warm start.
+  sub_stats = stats(subsolver)
+  SolverCore.reset!(sub_stats)
+  set_multipliers!(sub_stats, y, z, z)
 
   if verbose
     @info @sprintf(
@@ -64,96 +78,21 @@ function NCLSolve(
   infeasible = false
   tired = k > max_iter_NCL
 
-  # set absolute tolerances once and for all
-  ipopt_options = Dict{Symbol, Any}(
-    :dual_inf_tol => ω,     # leave these at the initial ω value
-    :constr_viol_tol => ω,
-  )
-
-  knitro_options = Dict{Symbol, Any}(#:opttol_abs => ω,  # for some reason this doesn't work?!?!?
-  #:feastol_abs => ω,
-  )
-
-  local inner_stats, z
-  if has_bounds(ncl.nlp)
-    local zL, zU
-  end
-
   while !(converged || infeasible || tired)
     k += 1
 
-    if solver == :ipopt
-      if k == 2
-        mu_init = 1e-4
-      elseif k == 4
-        mu_init = 1e-5
-      elseif k == 6
-        mu_init = 1e-6
-      elseif k == 8
-        mu_init = 1e-7
-      elseif k == 10
-        mu_init = 1e-8
-      end
+    # solve subproblem
+    subsolver(ncl, k, ω, x0 = xr)
 
-      inner_stats = _solve_ipopt(
-        ncl;
-        x0 = xr,
-        warm_start_init_point = k > 1 ? "yes" : "no",
-        mu_init = mu_init,
-        tol = ω,
-        ipopt_options...,
-        kwargs...,
-      )
+    failed(sub_stats) && @warn "subsolver returns with status " sub_stats.status
 
-      # warm-starting multipliers appears to help IPOPT
-      ipopt_options[:y0] = inner_stats.multipliers
-      if has_bounds(ncl.nlp)
-        ipopt_options[:zL0] = inner_stats.multipliers_L
-        ipopt_options[:zU0] = inner_stats.multipliers_U
-      end
-
-    elseif solver == :knitro
-      if k == 2
-        mu_init = 1e-3
-        knitro_options[:bar_slackboundpush] = 1.0e-3
-        knitro_options[:bar_murule] = 1
-      elseif k == 4
-        mu_init = 1e-5
-        knitro_options[:bar_slackboundpush] = 1.0e-5
-      elseif k == 6
-        mu_init = 1e-6
-        knitro_options[:bar_slackboundpush] = 1.0e-6
-      elseif k == 8
-        mu_init = 1e-7
-        knitro_options[:bar_slackboundpush] = 1.0e-7
-      elseif k == 10
-        mu_init = 1e-8
-        knitro_options[:bar_slackboundpush] = 1.0e-8
-      end
-      knitro_options[:bar_initmu] = mu_init
-      knitro_options[:opttol] = ω
-      knitro_options[:feastol] = ω
-      knitro_options[:opttol_abs] = ω0
-      knitro_options[:feastol_abs] = ω0
-      inner_stats = _solve_knitro(ncl; x0 = xr, knitro_options..., kwargs...)
-
-      # warm-starting multipliers doesn't seem to help KNITRO
-      # knitro_options[:y0] = inner_stats.multipliers
-      # knitro_options[:z0] = inner_stats.multipliers_L
-    else
-      error("The solver $solver is not supported.")
-    end
-
-    inner_stats.status == :first_order ||
-      @warn "inner solver returns with status" inner_stats.status
-
-    xr = inner_stats.solution
+    xr = sub_stats.solution
     x = xr[1:nx]
     r = xr[(nx + 1):(nx + nr)]
     rNorm = norm(r, Inf)
-    dual_feas = inner_stats.dual_feas
-    inner = inner_stats.iter
-    Δt = inner_stats.elapsed_time
+    dual_feas = sub_stats.dual_feas
+    inner = sub_stats.iter
+    Δt = sub_stats.elapsed_time
     t += Δt
 
     iter_count += inner
@@ -169,7 +108,7 @@ function NCLSolve(
         dual_feas,
         ω,
         ncl.ρ,
-        mu_init,
+        mu_init(subsolver),
         norm(ncl.y, Inf),
         norm(x),
         Δt
@@ -177,7 +116,7 @@ function NCLSolve(
     end
 
     if rNorm ≤ max(η, feas_tol)
-      ncl.y .+= ncl.ρ * r
+      ncl.y .+= ncl.ρ .* r
       η = η / τ_η
       ω = ω / τ_ω
 
@@ -222,16 +161,16 @@ function NCLSolve(
   elseif tired
     status = :max_iter
   else
-    status = inner_stats.status
+    status = sub_stats.status
   end
-  dual_feas = inner_stats.dual_feas
+  dual_feas = sub_stats.dual_feas
   primal_feas = η
   if has_bounds(ncl.nlp)
-    zL = inner_stats.multipliers_L[1:nx]
-    zU = inner_stats.multipliers_U[1:nx]
+    zL = sub_stats.multipliers_L[1:nx]
+    zU = sub_stats.multipliers_U[1:nx]
   end
 
-  stats = GenericExecutionStats(
+  ncl_stats = GenericExecutionStats(
     ncl.nlp,
     status = status,
     solution = x,
@@ -248,7 +187,7 @@ function NCLSolve(
     ),
   )
   if has_bounds(ncl.nlp)
-    set_bounds_multipliers!(stats, zL, zU)
+    set_bounds_multipliers!(ncl_stats, zL, zU)
   end
-  return stats
+  return ncl_stats
 end

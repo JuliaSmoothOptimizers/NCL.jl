@@ -1,19 +1,28 @@
 @testset "No solver by default" begin
-  @test isempty(NCL.available_solvers)
+  @test_throws ErrorException IpoptNCLSubSolver()
+  @test_throws ErrorException KnitroNCLSubSolver()
 end
 
 using NLPModelsIpopt
+using OptimizationProblems, OptimizationProblems.ADNLPProblems
 
 @testset "IPOPT solver available" begin
-  @test :ipopt ∈ NCL.available_solvers
+  model = hs16()
+  ncl_model = NCLModel(model)
+  sub = IpoptNCLSubSolver(ncl_model)
+  @test NCL.name(sub) == "IPOPT"
 end
 
-using OptimizationProblems, OptimizationProblems.ADNLPProblems
+@testset "IPOPT solver only supports Float64" begin
+  model = hs16(; type = Float32)
+  ncl_model = NCLModel(model)
+  @test_throws ErrorException IpoptNCLSubSolver(ncl_model)
+end
 
 @testset "Simple solve with IPOPT" begin
   model = hs16()
   ncl_model = NCLModel(model)
-  stats = NCLSolve(ncl_model, solver = :ipopt, verbose = false)
+  stats = NCLSolve(ncl_model, solver = :ipopt, verbose = true)
   @test stats.status == :first_order
 end
 
