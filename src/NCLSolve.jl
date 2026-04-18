@@ -61,6 +61,7 @@ function NCLSolve(
   t = 0.0
   iter_count = 0
   converged = false
+  infeasible = false
   tired = k > max_iter_NCL
 
   # set absolute tolerances once and for all
@@ -78,7 +79,7 @@ function NCLSolve(
     local zL, zU
   end
 
-  while !(converged || tired)
+  while !(converged || infeasible || tired)
     k += 1
 
     if solver == :ipopt
@@ -183,10 +184,21 @@ function NCLSolve(
     else
       ncl.ρ = min(ncl.ρ * τ_ρ, ρ_max)
       if ncl.ρ == ρ_max
-        @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
-              string(ρ_max) *
-              " reached at iteration k = " *
-              string(k)
+        if rNorm > max(η, feas_tol)
+          infeasible = true
+          @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
+                string(ρ_max) *
+                " reached at iteration k = " *
+                string(k) *
+                " with residual norm " *
+                string(rNorm) *
+                ", declaring infeasibility."
+        else
+          @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
+                string(ρ_max) *
+                " reached at iteration k = " *
+                string(k)
+        end
       end
     end
 
@@ -196,6 +208,8 @@ function NCLSolve(
 
   if converged
     status = :first_order
+  elseif infeasible
+    status = :infeasible
   elseif tired
     status = :max_iter
   else
