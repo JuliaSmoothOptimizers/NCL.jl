@@ -1,14 +1,5 @@
 export NCLSolve
 
-const ipopt_fixed_options = Dict(
-  :sb => "yes",  # options that are always used
-  :print_level => 0,
-  :max_iter => 100,
-)
-
-const knitro_fixed_options =
-  Dict(:algorithm => 1, :bar_directinterval => 0, :bar_initpt => 2, :outlev => 0, :maxit => 100)
-
 # TODO: avoid infinite loop due to NCLModel not being generated
 NCLSolve(nlp::AbstractNLPModel, args...; kwargs...) = NCLSolve(NCLModel(nlp), args...; kwargs...)
 
@@ -106,7 +97,6 @@ function NCLSolve(
         warm_start_init_point = k > 1 ? "yes" : "no",
         mu_init = mu_init,
         tol = ω,
-        ipopt_fixed_options...,
         ipopt_options...,
         kwargs...,
       )
@@ -141,8 +131,7 @@ function NCLSolve(
       knitro_options[:feastol] = ω
       knitro_options[:opttol_abs] = ω0
       knitro_options[:feastol_abs] = ω0
-      inner_stats =
-        _solve_knitro(ncl; x0 = xr, knitro_fixed_options..., knitro_options..., kwargs...)
+      inner_stats = _solve_knitro(ncl; x0 = xr, knitro_options..., kwargs...)
 
       # warm-starting multipliers doesn't seem to help KNITRO
       # knitro_options[:y0] = inner_stats.multipliers

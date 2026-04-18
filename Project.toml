@@ -28,9 +28,18 @@ julia = "1"
 
 [extras]
 ADNLPModels = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
+NLPModelsIpopt = "f4238b75-b362-5c4c-b852-0801c9a21d71"
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
+OptimizationProblems = "5049e819-d29b-5fba-b941-0eee7e64c1c6"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ADNLPModels", "NLPModelsTest", "SparseArrays", "Test"]
+test = [
+  "ADNLPModels",
+  "NLPModelsIpopt",
+  "NLPModelsTest",
+  "OptimizationProblems",
+  "SparseArrays",
+  "Test",
+]
