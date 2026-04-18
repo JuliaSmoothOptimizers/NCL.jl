@@ -184,8 +184,8 @@ function NCLSolve(
     else
       ncl.ρ = min(ncl.ρ * τ_ρ, ρ_max)
       if ncl.ρ == ρ_max
-        if rNorm > max(η, feas_tol)
-          infeasible = true
+        infeasible = true
+        if isfinite(rNorm)
           @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
                 string(ρ_max) *
                 " reached at iteration k = " *
@@ -197,7 +197,8 @@ function NCLSolve(
           @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
                 string(ρ_max) *
                 " reached at iteration k = " *
-                string(k)
+                string(k) *
+                " with non-finite residual norm, declaring infeasibility."
         end
       end
     end
