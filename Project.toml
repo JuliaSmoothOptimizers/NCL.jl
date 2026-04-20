@@ -11,15 +11,18 @@ SolverCore = "ff4d7338-4cf1-434d-91df-b86cb86fb843"
 
 [weakdeps]
 KNITRO = "67920dd8-b58e-52a8-8622-53c4cffbe346"
+MadNLP = "2621e9c9-9eb4-46b1-8089-e8c72242dfb6"
 NLPModelsIpopt = "f4238b75-b362-5c4c-b852-0801c9a21d71"
 NLPModelsKnitro = "bec4dd0d-7755-52d5-9a02-22f0ffc7efcb"
 
 [extensions]
 NCLIpoptExt = "NLPModelsIpopt"
 NCLKnitroExt = ["KNITRO", "NLPModelsKnitro"]
+NCLMadNLPExt = ["MadNLP"]
 
 [compat]
 KNITRO = "1"
+MadNLP = "0.9"
 NLPModels = "0.20, 0.21"
 NLPModelsIpopt = "0.11"
 NLPModelsKnitro = "0.9, 0.10"
@@ -37,6 +40,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [targets]
 test = [
   "ADNLPModels",
+  "MadNLP",
   "NLPModelsIpopt",
   "NLPModelsTest",
   "OptimizationProblems",

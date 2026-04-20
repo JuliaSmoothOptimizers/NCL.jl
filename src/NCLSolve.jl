@@ -5,7 +5,9 @@ abstract type AbstractNCLSubSolver <: AbstractOptimizationSolver end
 name(sub::AbstractNCLSubSolver) = sub.name
 stats(sub::AbstractNCLSubSolver) = sub.stats
 mu_init(sub::AbstractNCLSubSolver) = sub.mu_init
-failed(stats::GenericExecutionStats) = stats.status != :first_order
+elapsed_time(sub::AbstractNCLSubSolver) = sub.stats.elapsed_time
+
+failed(stats::AbstractExecutionStats) = stats.status != :first_order
 
 # TODO: avoid infinite loop due to NCLModel not being generated
 NCLSolve(nlp::AbstractNLPModel, args...; kwargs...) = NCLSolve(NCLModel(nlp), args...; kwargs...)
@@ -94,7 +96,7 @@ function NCLSolve(
     rNorm = norm(r, Inf)
     dual_feas = sub_stats.dual_feas
     inner = sub_stats.iter
-    Δt = sub_stats.elapsed_time
+    Δt = elapsed_time(subsolver)
     t += Δt
 
     iter_count += inner

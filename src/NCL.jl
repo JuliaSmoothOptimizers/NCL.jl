@@ -8,6 +8,7 @@ using SolverCore
 
 export IpoptNCLSubSolver
 export KnitroNCLSubSolver
+export MadNLPNCLSubSolver
 
 function IpoptNCLSubSolver(args...; kwargs...)
   error(
@@ -18,6 +19,12 @@ end
 function KnitroNCLSubSolver(args...; kwargs...)
   error(
     "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use KnitroNCLSubSolver.",
+  )
+end
+
+function MadNLPNCLSubSolver(args...; kwargs...)
+  error(
+    "MadNLP support is not loaded. Install and load MadNLP.jl in your environment to use MadNLPNCLSubSolver.",
   )
 end
 

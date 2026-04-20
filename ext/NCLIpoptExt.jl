@@ -73,7 +73,7 @@ function (sub::IpoptNCLSubSolver)(
   y0 = sub.stats.multipliers
   zL0 = sub.stats.multipliers_L
   zU0 = sub.stats.multipliers_U
-  return solve!(
+  return NLPModelsIpopt.solve!(
     sub.solver,
     ncl_model,
     sub.stats;

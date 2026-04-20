@@ -95,7 +95,7 @@ function (sub::KnitroNCLSubSolver)(
     kwargs...,
   )
 
-  return solve!(sub.solver, ncl_model, sub.stats)
+  return NLPModelsKnitro.solve!(sub.solver, ncl_model, sub.stats)
 end
 
 end
