@@ -40,7 +40,7 @@ end
   infeas_model = ADNLPModel(f, x0, lvar, uvar, c, lcon, ucon; name = "infeasible-rho-max")
 
   ncl_model = NCLModel(infeas_model; resid_linear = false)
-  stats = NCLSolve(ncl_model, solver = :ipopt, verbose = false)
+  stats = NCLSolve(ncl_model, verbose = false)
 
   @test stats.status == :infeasible
   @test get(stats.solver_specific, :internal_msg, nothing) == :Solve_Failed
