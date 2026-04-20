@@ -184,9 +184,7 @@ function NCLSolve(
     else
       ncl.ρ = min(ncl.ρ * τ_ρ, ρ_max)
       if ncl.ρ == ρ_max
-        if !isfinite(rNorm) || rNorm > feas_tol
-          infeasible = true
-        end
+        infeasible = !isfinite(rNorm) || rNorm > feas_tol
         if infeasible && isfinite(rNorm)
           @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
                 string(ρ_max) *
