@@ -63,3 +63,35 @@ end
   stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
   @test stats.status == :first_order
 end
+
+using AmplNLReader
+
+@testset "Simple TAX problem with IPOPT" begin
+  model = AmplModel(joinpath(@__DIR__, "..", "data", "tax1D.nl"))
+  ncl_model = NCLModel(model)
+  stats = NCLSolve(ncl_model, verbose = false)
+  @test stats.status == :first_order
+end
+
+@testset "Simple TAX problem with MadNLP" begin
+  model = AmplModel(joinpath(@__DIR__, "..", "data", "tax1D.nl"))
+  ncl_model = NCLModel(model)
+  sub = MadNLPNCLSubSolver(ncl_model)
+  stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+  @test stats.status == :first_order
+end
+
+@testset "Simple MPEC with IPOPT" begin
+  model = AmplModel(joinpath(@__DIR__, "..", "data", "simplempec.nl"))
+  ncl_model = NCLModel(model)
+  stats = NCLSolve(ncl_model, verbose = false)
+  @test stats.status == :first_order
+end
+
+@testset "Simple MPEC with MadNLP" begin
+  model = AmplModel(joinpath(@__DIR__, "..", "data", "simplempec.nl"))
+  ncl_model = NCLModel(model)
+  sub = MadNLPNCLSubSolver(ncl_model)
+  stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+  @test stats.status == :first_order
+end

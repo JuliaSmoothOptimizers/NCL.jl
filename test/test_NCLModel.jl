@@ -330,9 +330,11 @@ function test_NCLModel()
       end
 
       @testset "NCLModel constraint jac_coord()" begin
+        # Our home-baked jac_structure doesn't return elements in the same order
+        # as the default implementation in NLPModels.
         rows, cols = jac_structure(ncl_cons_res)
-        @test rows[9:12] == [3, 4, 3, 4]
-        @test cols[9:12] == [2, 2, 5, 6]
+        @test rows[9:12] == [1, 2, 3, 4]
+        @test cols[9:12] == [3, 4, 5, 6]
         vals = jac_coord(ncl_cons_res, [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
         @test vals[9:12] == [1, 1, 1, 1]
       end
@@ -342,16 +344,25 @@ function test_NCLModel()
         x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0]
         vals = Vector{Float64}(undef, ncl_cons_res.meta.nnzj)
         jac_coord!(ncl_cons_res, x, vals)
-        @test vals == [1, 1, -1, -1, 1, 1, 2, 1, 1, 1, 1, 1]
+        @test vals == [1, 1, -1, -1, 2, 1, 1, 1, 1, 1, 1, 1]
         x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0]
         jac_coord!(ncl_cons_res, x, vals)
-        @test vals == [1, 1, -1, -1, 1, 1, 2, 0.5, 1, 1, 1, 1]
+        @test vals == [1, 1, -1, -1, 2, 0.5, 1, 1, 1, 1, 1, 1]
       end
 
-      @testset "NCLModel constraint jac_struct()" begin
-        rows, cols = jac_structure(ncl_cons_res)
-        @test rows[9:12] == [3, 4, 3, 4]
-        @test cols[9:12] == [2, 2, 5, 6]
+      @testset "NCLModel constraint jac_lin_coord()" begin
+        rows, cols = jac_lin_structure(ncl_cons_res)
+        @test rows[5:6] == [1, 2]
+        @test cols[5:6] == [3, 4]
+        vals = jac_lin_coord(ncl_cons_res, [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
+        @test vals[5:6] == [1, 1]
+      end
+      @testset "NCLModel constraint jac_nln_coord()" begin
+        rows, cols = jac_nln_structure(ncl_cons_res)
+        @test rows[5:6] == [1, 2]
+        @test cols[5:6] == [5, 6]
+        vals = jac_nln_coord(ncl_cons_res, [1.0, 0.5, 1.0, 1.0, 0.0, -1.0])
+        @test vals[5:6] == [1, 1]
       end
 
       @testset "NCLModel constraint jprod()" begin
@@ -453,11 +464,19 @@ function test_NCLModel()
     end
   end
 
-  @testset "NLPModelsTest dimension check, resid_linear = false" begin
+  @testset "NLPModelsTest dimension check, resid_linear = false, linear_api = true" begin
     check_nlp_dimensions(ncl_nlin_res, linear_api = true)
   end
 
-  @testset "NLPModelsTest dimension check, resid_linear = true" begin
+  @testset "NLPModelsTest dimension check, resid_linear = true, linear_api = true" begin
     check_nlp_dimensions(ncl_cons_res, linear_api = true)
+  end
+
+  @testset "NLPModelsTest dimension check, resid_linear = false, linear_api = false" begin
+    check_nlp_dimensions(ncl_nlin_res, linear_api = false)
+  end
+
+  @testset "NLPModelsTest dimension check, resid_linear = true, linear_api = false" begin
+    check_nlp_dimensions(ncl_cons_res, linear_api = false)
   end
 end
