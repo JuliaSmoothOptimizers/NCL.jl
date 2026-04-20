@@ -17,7 +17,7 @@ end
 
 function KnitroNCLSubSolver(args...; kwargs...)
   error(
-    "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use KnitroNCLSolver.",
+    "Knitro support is not loaded. Install and load KNITRO.jl and NLPModelsKnitro.jl to use KnitroNCLSubSolver.",
   )
 end
 

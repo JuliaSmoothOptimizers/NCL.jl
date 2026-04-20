@@ -19,7 +19,9 @@ function NCLSolve(
   verbose::Bool = true,
   kwargs...,  # will be passed directly to inner solver
 )
-  @info "NCL: using subsolver $(name(subsolver))"
+  if verbose
+    @info "NCL: using subsolver $(name(subsolver))"
+  end
 
   NLPModels.reset!(ncl.nlp)
   NLPModels.reset!(ncl)
@@ -82,7 +84,7 @@ function NCLSolve(
     k += 1
 
     # solve subproblem
-    subsolver(ncl, k, ω, x0 = xr)
+    subsolver(ncl, k, ω; x0 = xr, kwargs...)
 
     failed(sub_stats) && @warn "subsolver returns with status " sub_stats.status
 

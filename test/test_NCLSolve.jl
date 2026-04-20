@@ -22,7 +22,8 @@ end
 @testset "Simple solve with IPOPT" begin
   model = hs16()
   ncl_model = NCLModel(model)
-  stats = NCLSolve(ncl_model, solver = :ipopt, verbose = true)
+  subsolver = IpoptNCLSubSolver(ncl_model)
+  stats = NCLSolve(ncl_model; subsolver = subsolver, verbose = false)
   @test stats.status == :first_order
 end
 
