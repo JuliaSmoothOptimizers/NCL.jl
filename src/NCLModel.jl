@@ -331,7 +331,7 @@ function NLPModels.jac_structure!(
   orig_jcols = view(jcols, 1:orig_nnzj)
   jac_structure!(ncl.nlp, orig_jrows, orig_jcols)
   nnzj = get_nnzj(ncl)
-  jrows[(orig_nnzj + 1):nnzj] .= ncl.resid_linear ? (1:get_ncon(ncl)) : get_nln(ncl.nlp)
+  jrows[(orig_nnzj + 1):nnzj] .= ncl.resid_linear ? (1:get_ncon(ncl)) : get_nln(ncl)
   jcols[(orig_nnzj + 1):nnzj] .= (ncl.nx + 1):get_nvar(ncl)
   return jrows, jcols
 end
