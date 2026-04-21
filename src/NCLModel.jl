@@ -261,6 +261,27 @@ function NLPModels.hprod!(
   return hv
 end
 
+# Implement cons! for models that do not support the linear/nonlinear API.
+function NLPModels.cons!(
+  ncl::NCLModel{T, S, M},
+  xr::AbstractVector,
+  cx::AbstractVector,
+) where {T, S, M <: AbstractNLPModel{T, S}}
+  @lencheck get_nvar(ncl) xr
+  @lencheck get_ncon(ncl) cx
+  increment!(ncl, :neval_cons)
+  x = view(xr, 1:(ncl.nx))
+  cons!(ncl.nlp, x, cx)
+  r = view(xr, (ncl.nx + 1):(ncl.nx + ncl.nr))
+  if ncl.resid_linear
+    cx .+= r
+  else
+    nln = get_nln(ncl)
+    cx[nln] .+= r
+  end
+  return cx
+end
+
 function NLPModels.cons_lin!(
   ncl::NCLModel{T, S, M},
   xr::AbstractVector,
@@ -295,6 +316,24 @@ function NLPModels.cons_nln!(
     cx .+= r
   end
   return cx
+end
+
+# Implement jac_structure! for models that do not support the linear/nonlinear API.
+function NLPModels.jac_structure!(
+  ncl::NCLModel{T, S, M},
+  jrows::AbstractVector{<:Integer},
+  jcols::AbstractVector{<:Integer},
+) where {T, S, M <: AbstractNLPModel{T, S}}
+  @lencheck get_nnzj(ncl) jrows jcols
+  increment!(ncl, :neval_jac)
+  orig_nnzj = get_nnzj(ncl.nlp)
+  orig_jrows = view(jrows, 1:orig_nnzj)
+  orig_jcols = view(jcols, 1:orig_nnzj)
+  jac_structure!(ncl.nlp, orig_jrows, orig_jcols)
+  nnzj = get_nnzj(ncl)
+  jrows[(orig_nnzj + 1):nnzj] .= ncl.resid_linear ? (1:get_ncon(ncl)) : get_nln(ncl)
+  jcols[(orig_nnzj + 1):nnzj] .= (ncl.nx + 1):get_nvar(ncl)
+  return jrows, jcols
 end
 
 function NLPModels.jac_lin_structure!(
@@ -340,6 +379,22 @@ function NLPModels.jac_nln_structure!(
   return jrows, jcols
 end
 
+function NLPModels.jac_coord!(
+  ncl::NCLModel{T, S, M},
+  xr::AbstractVector,
+  jvals::AbstractVector,
+) where {T, S, M <: AbstractNLPModel{T, S}}
+  @lencheck get_nvar(ncl) xr
+  @lencheck get_nnzj(ncl) jvals
+  increment!(ncl, :neval_jac)
+  orig_nnzj = get_nnzj(ncl.nlp)
+  orig_jvals = view(jvals, 1:orig_nnzj)
+  x = view(xr, 1:(ncl.nx))
+  jac_coord!(ncl.nlp, x, orig_jvals)
+  jvals[(orig_nnzj + 1):get_nnzj(ncl)] .= 1
+  return jvals
+end
+
 function NLPModels.jac_lin_coord!(
   ncl::NCLModel{T, S, M},
   xr::AbstractVector,
@@ -372,6 +427,27 @@ function NLPModels.jac_nln_coord!(
   jac_nln_coord!(ncl.nlp, x, orig_jvals)
   jvals[(orig_nln_nnzj + 1):get_nln_nnzj(ncl)] .= 1
   return jvals
+end
+
+function NLPModels.jprod!(
+  ncl::NCLModel{T, S, M},
+  xr::AbstractVector,
+  v::AbstractVector,
+  Jv::AbstractVector,
+) where {T, S, M <: AbstractNLPModel{T, S}}
+  @lencheck get_nvar(ncl) xr v
+  @lencheck get_ncon(ncl) Jv
+  increment!(ncl, :neval_jprod)
+  x = view(xr, 1:(ncl.nx))
+  vx = view(v, 1:(ncl.nx))
+  jprod!(ncl.nlp, x, vx, Jv)
+  vr = view(v, (ncl.nx + 1):(ncl.nx + ncl.nr))
+  if ncl.resid_linear
+    Jv .+= vr
+  else
+    Jv[get_nln(ncl)] .+= vr
+  end
+  return Jv
 end
 
 function NLPModels.jprod_lin!(
@@ -410,6 +486,22 @@ function NLPModels.jprod_nln!(
   vr_nl = ncl.resid_linear ? view(vr, get_nln(ncl)) : vr
   Jv .+= vr_nl
   return Jv
+end
+
+function NLPModels.jtprod!(
+  ncl::NCLModel{T, S, M},
+  xr::AbstractVector,
+  v::AbstractVector,
+  Jtv::AbstractVector,
+) where {T, S, M <: AbstractNLPModel{T, S}}
+  @lencheck get_nvar(ncl) xr Jtv
+  @lencheck get_ncon(ncl) v
+  increment!(ncl, :neval_jtprod)
+  x = view(xr, 1:(ncl.nx))
+  orig_Jtv = view(Jtv, 1:(ncl.nx))
+  jtprod!(ncl.nlp, x, v, orig_Jtv)
+  Jtv[(ncl.nx + 1):get_nvar(ncl)] .= (ncl.resid_linear) ? v : view(v, get_nln(ncl))
+  return Jtv
 end
 
 function NLPModels.jtprod_lin!(
