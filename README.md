@@ -27,7 +27,7 @@ It is available from <https://github.com/optimizers/ncl>.
 
 ## References
 
-- Ma D., Judd, K., Orban, D., & Saunders, M. (2018). [Stabilized optimization via an NCL algorithm](https://dx.doi.org/10.1007/978-3-319-90026-1_8). In M. Al-Baali, L. Grandinetti, & A. Purnama (Eds.), Numerical Analysis and Optimization (Vol. 235, pp. 173–191). Switzerland: Springer International Publishing.
+- Ma, D., Judd, K., Orban, D., & Saunders, M. (2018). [Stabilized optimization via an NCL algorithm](https://dx.doi.org/10.1007/978-3-319-90026-1_8). In M. Al-Baali, L. Grandinetti, & A. Purnama (Eds.), Numerical Analysis and Optimization (Vol. 235, pp. 173–191). Switzerland: Springer International Publishing.
 - Ma, D., Orban, D., & Saunders, M.A. (2021). [A Julia Implementation of Algorithm NCL for Constrained Optimization](https://doi.org/10.1007/978-3-030-72040-7_8). In: Al-Baali, M., Purnama, A., Grandinetti, L. (eds) Numerical Analysis and Optimization. NAO 2020. Springer Proceedings in Mathematics & Statistics, vol 354. Springer, Cham.
 - Ma, D., Orban, D. & Saunders, M.A. (2025). [Solving Algorithm NCL’s Subproblems: The Need for Interior Methods](https://doi.org/10.1007/s10013-025-00760-z). Vietnam J. Math. 53, 915–919.
 - Several talks by Michael A. Saunders: <https://stanford.edu/group/SOL/publications_talks.html>
