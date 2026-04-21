@@ -16,6 +16,7 @@ mutable struct IpoptNCLSubSolver <: AbstractNCLSubSolver
 end
 
 # ... constructor
+@doc (@doc AbstractNCLSubSolver) NCL.IpoptNCLSubSolver
 function NCL.IpoptNCLSubSolver(::NCLModel{T, S, M}; kwargs...) where {T, S, M}
   error("IPOPT only supports models with Float64 element type.")
 end

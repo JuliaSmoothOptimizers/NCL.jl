@@ -17,6 +17,7 @@ mutable struct KnitroNCLSubSolver <: AbstractNCLSubSolver
 end
 
 # ... constructor
+@doc (@doc AbstractNCLSubSolver) NCL.IpoptNCLSubSolver
 function NCL.KnitroNCLSubSolver(::NCLModel{T, S, M}; kwargs...) where {T, S, M}
   error("KNITRO only supports models with Float64 element type.")
 end
