@@ -4,6 +4,22 @@
   @test_throws ErrorException MadNLPNCLSubSolver()
 end
 
+@testset "Unconstrained problem errors out" begin
+  f(x) = zero(eltype(x))
+  x0 = [0.0]
+  model = ADNLPModel(f, x0)
+  @test_throws ErrorException NCLSolve(model)
+end
+
+@testset "Bound-constrained problem errors out" begin
+  f(x) = zero(eltype(x))
+  x0 = [0.0]
+  lvar = [-1.0]
+  uvar = [1.0]
+  model = ADNLPModel(f, x0, lvar, uvar)
+  @test_throws ErrorException NCLSolve(model)
+end
+
 using NLPModelsIpopt
 using OptimizationProblems, OptimizationProblems.ADNLPProblems
 

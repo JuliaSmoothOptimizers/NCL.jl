@@ -9,8 +9,12 @@ elapsed_time(sub::AbstractNCLSubSolver) = sub.stats.elapsed_time
 
 failed(stats::AbstractExecutionStats) = stats.status != :first_order
 
-# TODO: avoid infinite loop due to NCLModel not being generated
-NCLSolve(nlp::AbstractNLPModel, args...; kwargs...) = NCLSolve(NCLModel(nlp), args...; kwargs...)
+function NCLSolve(nlp::AbstractNLPModel, args...; kwargs...)
+  if unconstrained(nlp) || bound_constrained(nlp)
+    error("NCL is designed for constrained problems only")
+  end
+  NCLSolve(NCLModel(nlp), args...; kwargs...)
+end
 
 function NCLSolve(
   ncl::NCLModel;
