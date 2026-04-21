@@ -60,10 +60,12 @@ function NCLModel(
   ρ::T = one(T),
   y::S = fill!(similar(get_x0(nlp), resid_linear ? get_ncon(nlp) : get_nnln(nlp)), 1),
 ) where {T, S}
-  if (get_ncon(nlp) == 0)
-    @warn("input problem $(get_name(nlp)) is unconstrained, not generating NCL model")
+  if unconstrained(nlp) || bound_constrained(nlp)
+    @warn(
+      "input problem $(get_name(nlp)) is unconstrained or bound constrained, not generating NCL model"
+    )
     return nlp
-  elseif ((get_nnln(nlp) == 0) && !resid_linear)
+  elseif linearly_constrained(nlp) && !resid_linear
     @warn(
       "input problem $(get_name(nlp)) is linearly constrained and `resid_linear` is `false`, not generating NCL model"
     )
