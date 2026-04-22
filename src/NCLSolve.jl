@@ -85,31 +85,32 @@ function NCLSolve(
     @info "NCL: using subsolver $(name(subsolver))"
   end
 
-  NLPModels.reset!(ncl.nlp)
+  nlp = get_nlp(ncl)
+  NLPModels.reset!(nlp)
   NLPModels.reset!(ncl)
 
-  nx = ncl.nx
-  nr = ncl.nr
+  nx = get_nx(ncl)
+  nr = get_nr(ncl)
 
   τ_ρ = 10  # factor by which we increase ρ on unsuccessful iterations
   τ_η = 10  # factor by which we decrease η on successful iterations
   τ_ω = 10  # factor by which we decrease ω on successful iterations
 
-  ncl.ρ = 1.0e+2
+  set_penalty_parameter!(ncl, 1.0e+2)
   ρ_max = 1.0e+12
 
   η = 1.0e+1  # initial primal feastibility tolerance
   ω0 = ω = 1.0e+1  # initial dual feasibility tolerance
 
-  probname = replace(ncl.meta.name, "/" => "_")
+  probname = replace(get_name(ncl), "/" => "_")
 
-  xr = copy(ncl.meta.x0)
+  xr = copy(get_x0(ncl))
   x = xr[1:nx]
   r = xr[(nx + 1):(nx + nr)]
   rNorm = norm(r, Inf)
   best_rNorm = rNorm
-  y = ncl.meta.y0
-  z = zeros(ncl.meta.nvar)
+  y = get_y0(ncl)
+  z = zeros(get_nvar(ncl))
 
   # Initialize multipliers in subsolver.stats.
   # The subsolver uses these to warm start.
@@ -171,25 +172,26 @@ function NCLSolve(
         η,
         dual_feas,
         ω,
-        ncl.ρ,
+        get_penalty_parameter(ncl),
         mu_init(subsolver),
-        norm(ncl.y, Inf),
+        norm(get_multipliers(ncl), Inf),
         norm(x),
         Δt
       )
     end
 
     if rNorm ≤ max(η, feas_tol)
-      ncl.y .+= ncl.ρ .* r
+      add_to_multipliers!(ncl, get_penalty_parameter(ncl), r)  # ncl.y .+= ncl.ρ .* r
       η = η / τ_η
       ω = ω / τ_ω
 
     else
-      ncl.ρ = min(ncl.ρ * τ_ρ, ρ_max)
-      if ncl.ρ == ρ_max
+      ρ = get_penalty_parameter(ncl)
+      set_penalty_parameter!(ncl, min(ρ * τ_ρ, ρ_max))
+      if ρ == ρ_max
         infeasible = !isfinite(rNorm) || rNorm > feas_tol
         if infeasible && isfinite(rNorm)
-          @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
+          @warn "\nin NCLSolve($(get_name(nlp))): maximum penalty ρ = " *
                 string(ρ_max) *
                 " reached at iteration k = " *
                 string(k) *
@@ -197,13 +199,13 @@ function NCLSolve(
                 string(rNorm) *
                 ", declaring infeasibility."
         elseif infeasible
-          @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
+          @warn "\nin NCLSolve($(get_name(nlp))): maximum penalty ρ = " *
                 string(ρ_max) *
                 " reached at iteration k = " *
                 string(k) *
                 " with non-finite residual norm, declaring infeasibility."
         else
-          @warn "\nin NCLSolve($(ncl.nlp.meta.name)): maximum penalty ρ = " *
+          @warn "\nin NCLSolve($(get_name(nlp))): maximum penalty ρ = " *
                 string(ρ_max) *
                 " reached at iteration k = " *
                 string(k) *
@@ -229,28 +231,28 @@ function NCLSolve(
   end
   dual_feas = sub_stats.dual_feas
   primal_feas = η
-  if has_bounds(ncl.nlp)
+  if has_bounds(nlp)
     zL = sub_stats.multipliers_L[1:nx]
     zU = sub_stats.multipliers_U[1:nx]
   end
 
   ncl_stats = GenericExecutionStats(
-    ncl.nlp,
+    nlp,
     status = status,
     solution = x,
     iter = iter_count,
     primal_feas = primal_feas,
     dual_feas = dual_feas,
-    objective = obj(ncl.nlp, x),
+    objective = obj(nlp, x),
     elapsed_time = t,
-    multipliers = ncl.y,
+    multipliers = get_multipliers(ncl),
     #! doesn't work... counters = nlp.counters,
     solver_specific = Dict(
       :internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
       :residuals => r,
     ),
   )
-  if has_bounds(ncl.nlp)
+  if has_bounds(nlp)
     set_bounds_multipliers!(ncl_stats, zL, zU)
   end
   return ncl_stats

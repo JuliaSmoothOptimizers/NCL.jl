@@ -1,7 +1,6 @@
 function test_NCLModel()
   # Test parameters
   ρ = 1.0
-  y = [2.0, 1.0]
   g = Vector{Float64}(undef, 4)
   cx = Vector{Float64}(undef, 4)
 
@@ -35,32 +34,37 @@ function test_NCLModel()
   name = "Unit test problem"
   nlp::ADNLPModel = ADNLPModel(f, x0, lvar, uvar, A, c, lcon, ucon; name = name)
 
-  ncl_nlin_res = NCLModel(nlp; resid = 1.0, resid_linear = false, y = [1.0, 1.0])
-  ncl_nlin_res.y = y
-  ncl_nlin_res.ρ = ρ
+  ncl_nlin_res = NCLModel(nlp; resid = 1.0, ρ = 2.0, resid_linear = false, y = [1.0, 1.0])
 
   ncl_cons_res = NCLModel(nlp; resid = 1.0, resid_linear = true, y = [1.0, 1.0, 1.0, 1.0])
-  ncl_cons_res.ρ = ρ
 
   @testset "NCLModel. No linear residuals" begin
     @testset "NCLModel struct" begin
       @testset "NCLModel struct information about nlp" begin
-        @test ncl_nlin_res.nx == 2
-        @test ncl_nlin_res.nr == 2  # 2 nonlinear constraint => 2 residuals
-        @test ncl_nlin_res.meta.minimize == true
+        @test get_nx(ncl_nlin_res) == 2
+        @test get_nr(ncl_nlin_res) == 2  # 2 nonlinear constraint => 2 residuals
+        @test get_minimize(ncl_nlin_res) == true
       end
 
       @testset "NCLModel struct constant parameters" begin
-        @test ncl_nlin_res.meta.nvar == 4 # 2 x, 2 r
-        @test ncl_nlin_res.meta.lvar == [0.0, 0.0, -Inf, -Inf] # no bounds for residuals
-        @test ncl_nlin_res.meta.uvar == [1.0, 1.0, Inf, Inf]
-        @test ncl_nlin_res.meta.x0 == [0.5, 0.5, 1.0, 1.0]
-        @test ncl_nlin_res.meta.y0 == [0.0, 0.0, 0.0, 0.0]
-        @test ncl_nlin_res.y == y
-        @test length(ncl_nlin_res.y) == ncl_nlin_res.nr
-        @test ncl_nlin_res.meta.nnzj == nlp.meta.nnzj + 2 # 2 residuals, one for each non linear constraint
-        @test ncl_nlin_res.meta.nnzh == nlp.meta.nnzh + 2 # add a digonal of ρ
+        @test get_nvar(ncl_nlin_res) == 4 # 2 x, 2 r
+        @test get_lvar(ncl_nlin_res) == [0.0, 0.0, -Inf, -Inf] # no bounds for residuals
+        @test get_uvar(ncl_nlin_res) == [1.0, 1.0, Inf, Inf]
+        @test get_x0(ncl_nlin_res) == [0.5, 0.5, 1.0, 1.0]
+        @test get_penalty_parameter(ncl_nlin_res) == 2.0
+        @test get_multipliers(ncl_nlin_res) == [1.0, 1.0]
+        @test get_y0(ncl_nlin_res) == [0.0, 0.0, 0.0, 0.0]
+        @test length(get_multipliers(ncl_nlin_res)) == get_nr(ncl_nlin_res)
+        @test get_nnzj(ncl_nlin_res) == get_nnzj(nlp) + 2 # 2 residuals, one for each non linear constraint
+        @test get_nnzh(ncl_nlin_res) == get_nnzh(nlp) + 2 # add a digonal of ρ
       end
+    end
+
+    @testset "NCLModel setters" begin
+      add_to_multipliers!(ncl_nlin_res, 1.0, [1.0, 0.0])
+      @test get_multipliers(ncl_nlin_res) == [2.0, 1.0]
+      set_penalty_parameter!(ncl_nlin_res, ρ)
+      @test get_penalty_parameter(ncl_nlin_res) == ρ
     end
 
     @testset "NCLModel f" begin
@@ -88,7 +92,7 @@ function test_NCLModel()
           0.0 0.0 ρ 0.0
           0.0 0.0 0.0 ρ
         ]
-        @test hess(ncl_nlin_res, ncl_nlin_res.meta.x0, [1.0, 1.0, 1.0, 1.0]).data == [
+        @test hess(ncl_nlin_res, get_x0(ncl_nlin_res), [1.0, 1.0, 1.0, 1.0]).data == [
           2.0 0.0 0.0 0.0  # not symmetric because only the lower triangle is returned by hess
           1.0 0.0 0.0 0.0
           0.0 0.0 ρ 0.0
@@ -98,27 +102,29 @@ function test_NCLModel()
 
       @testset "NCLModel Hessian of the Lagrangian hess_structure()" begin
         hrows, hcols = hess_structure(ncl_nlin_res)
-        @test hrows[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + 2)] == [3, 4]
-        @test hcols[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + 2)] == [3, 4]
+        nnzh = get_nnzh(nlp)
+        @test hrows[(nnzh + 1):(nnzh + 2)] == [3, 4]
+        @test hcols[(nnzh + 1):(nnzh + 2)] == [3, 4]
 
         hrows_nlin_res, hcols_nlin_res = hess_structure(ncl_nlin_res)
-        hrows_nlp, hcols_nlp = hess_structure(ncl_nlin_res.nlp)
+        hrows_nlp, hcols_nlp = hess_structure(nlp)
         @test hrows_nlin_res == vcat(hrows_nlp, [3, 4])
         @test hcols_nlin_res == vcat(hcols_nlp, [3, 4])
       end
 
       @testset "NCLModel Hessian of the Lagrangian hess_coord()" begin
         hvals = hess_coord(ncl_nlin_res, [0.0, 0.0, 0.0, 0.0], zeros(Float64, 4))
-        @test hvals[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + 2)] == [ρ, ρ]
+        nnzh = get_nnzh(nlp)
+        @test hvals[(nnzh + 1):(nnzh + 2)] == [ρ, ρ]
 
-        hvals = hess_coord(ncl_nlin_res, ncl_nlin_res.meta.x0, [1.0, 1.0, 1.0, 1.0])
-        @test hvals[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + 2)] == [ρ, ρ]
+        hvals = hess_coord(ncl_nlin_res, get_x0(ncl_nlin_res), [1.0, 1.0, 1.0, 1.0])
+        @test hvals[(nnzh + 1):(nnzh + 2)] == [ρ, ρ]
       end
 
       @testset "NCLModel Hessian of the Lagrangian hprod()" begin
         @test hprod(
           ncl_nlin_res,
-          ncl_nlin_res.meta.x0,
+          get_x0(ncl_nlin_res),
           [1.0, 1.0, 1.0, 1.0],
           [1.0, 2.0, 3.0, 4.0],
         ) == [4, 1, 3ρ, 4ρ]
@@ -127,7 +133,7 @@ function test_NCLModel()
       @testset "NCLModel Hessian of the Lagrangian hprod!()" begin
         @test hprod!(
           ncl_nlin_res,
-          ncl_nlin_res.meta.x0,
+          get_x0(ncl_nlin_res),
           [1.0, 1.0, 1.0, 1.0],
           [1.0, 2.0, 3.0, 4.0],
           Hv,
@@ -206,21 +212,22 @@ function test_NCLModel()
   @testset "NCLModel. All residuals" begin
     @testset "NCLModel struct" begin
       @testset "NCLModel struct information about nlp" begin
-        @test ncl_cons_res.nx == 2
-        @test ncl_cons_res.nr == 4 # two non linear constraint, so two residuals
-        @test ncl_cons_res.meta.minimize == true
+        @test get_nx(ncl_cons_res) == 2
+        @test get_nr(ncl_cons_res) == 4 # two non linear constraint, so two residuals
+        @test get_minimize(ncl_cons_res) == true
       end
 
       @testset "NCLModel struct constant parameters" begin
-        @test ncl_cons_res.meta.nvar == 6 # 2 x, 4 r
-        @test ncl_cons_res.meta.lvar == [0.0, 0.0, -Inf, -Inf, -Inf, -Inf] # no bounds for residuals
-        @test ncl_cons_res.meta.uvar == [1.0, 1.0, Inf, Inf, Inf, Inf]
-        @test ncl_cons_res.meta.x0 == [0.5, 0.5, 1.0, 1.0, 1.0, 1.0]
-        @test ncl_cons_res.meta.y0 == [0.0, 0.0, 0.0, 0.0]
-        @test ncl_cons_res.y == [1.0, 1.0, 1.0, 1.0]
-        @test length(ncl_cons_res.y) == ncl_cons_res.nr
-        @test ncl_cons_res.meta.nnzj == nlp.meta.nnzj + 4 # 2 residuals, one for each constraint
-        @test ncl_cons_res.meta.nnzh == nlp.meta.nnzh + 4 # add a digonal of ρ
+        @test get_nvar(ncl_cons_res) == 6 # 2 x, 4 r
+        @test get_lvar(ncl_cons_res) == [0.0, 0.0, -Inf, -Inf, -Inf, -Inf] # no bounds for residuals
+        @test get_uvar(ncl_cons_res) == [1.0, 1.0, Inf, Inf, Inf, Inf]
+        @test get_x0(ncl_cons_res) == [0.5, 0.5, 1.0, 1.0, 1.0, 1.0]
+        @test get_y0(ncl_cons_res) == [0.0, 0.0, 0.0, 0.0]
+        @test get_multipliers(ncl_cons_res) == [1.0, 1.0, 1.0, 1.0]
+        @test get_penalty_parameter(ncl_cons_res) == 1.0
+        @test length(get_multipliers(ncl_cons_res)) == get_nr(ncl_cons_res)
+        @test get_nnzj(ncl_cons_res) == get_nnzj(nlp) + 4 # 2 residuals, one for each constraint
+        @test get_nnzh(ncl_cons_res) == get_nnzh(nlp) + 4 # add a digonal of ρ
       end
     end
 
@@ -254,7 +261,7 @@ function test_NCLModel()
           0.0 0.0 0.0 0.0 ρ 0.0
           0.0 0.0 0.0 0.0 0.0 ρ
         ]
-        @test hess(ncl_cons_res, ncl_cons_res.meta.x0, ones(4)).data == [
+        @test hess(ncl_cons_res, get_x0(ncl_cons_res), ones(4)).data == [
           2.0 0.0 0.0 0.0 0.0 0.0 # not symmetric because only the lower triangle is returned by hess
           1.0 0.0 0.0 0.0 0.0 0.0
           0.0 0.0 ρ 0.0 0.0 0.0
@@ -266,32 +273,35 @@ function test_NCLModel()
 
       @testset "NCLModel Hessian of the Lagrangian hess_structure()" begin
         hrows, hcols = hess_structure(ncl_cons_res)
-        @test hrows[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] == [3, 4, 5, 6]
-        @test hcols[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] == [3, 4, 5, 6]
+        nnzh = get_nnzh(nlp)
+        nr = get_nr(ncl_cons_res)
+        @test hrows[(nnzh + 1):(nnzh + nr)] == [3, 4, 5, 6]
+        @test hcols[(nnzh + 1):(nnzh + nr)] == [3, 4, 5, 6]
 
-        @test hess_coord(ncl_cons_res, zeros(6), zeros(4))[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] ==
-              [ρ, ρ, ρ, ρ]
-        @test hess_coord(ncl_cons_res, ncl_cons_res.meta.x0, ones(4))[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] ==
+        @test hess_coord(ncl_cons_res, zeros(6), zeros(4))[(nnzh + 1):(nnzh + nr)] == [ρ, ρ, ρ, ρ]
+        @test hess_coord(ncl_cons_res, get_x0(ncl_cons_res), ones(4))[(nnzh + 1):(nnzh + nr)] ==
               [ρ, ρ, ρ, ρ]
       end
 
       @testset "NCLModel Hessian of the Lagrangian hess_coord!()" begin
         hvals = hess_coord(ncl_cons_res, zeros(6))
-        @test hvals[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] == [ρ, ρ, ρ, ρ]
+        nnzh = get_nnzh(nlp)
+        nr = get_nr(ncl_cons_res)
+        @test hvals[(nnzh + 1):(nnzh + nr)] == [ρ, ρ, ρ, ρ]
 
-        hvals = hess_coord(ncl_cons_res, ncl_cons_res.meta.x0, ones(4))
-        @test hvals[(nlp.meta.nnzh + 1):(nlp.meta.nnzh + ncl_cons_res.nr)] == [ρ, ρ, ρ, ρ]
+        hvals = hess_coord(ncl_cons_res, get_x0(ncl_cons_res), ones(4))
+        @test hvals[(nnzh + 1):(nnzh + nr)] == [ρ, ρ, ρ, ρ]
       end
 
       @testset "NCLModel Hessian of the Lagrangian hprod()" begin
-        @test hprod(ncl_cons_res, ncl_cons_res.meta.x0, ones(4), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]) ==
+        @test hprod(ncl_cons_res, get_x0(ncl_cons_res), ones(4), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]) ==
               [4, 1, 3 * ρ, 4 * ρ, 5 * ρ, 6 * ρ]
       end
 
       @testset "NCLModel Hessian of the Lagrangian hprod!()" begin
         @test hprod!(
           ncl_cons_res,
-          ncl_cons_res.meta.x0,
+          get_x0(ncl_cons_res),
           ones(4),
           [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
           vcat(Hv, [0.0, 0.0]),
@@ -342,7 +352,7 @@ function test_NCLModel()
       @testset "NCLModel constraint jac_coord!()" begin
         rows, cols = jac_structure(ncl_cons_res)
         x = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0]
-        vals = Vector{Float64}(undef, ncl_cons_res.meta.nnzj)
+        vals = Vector{Float64}(undef, get_nnzj(ncl_cons_res))
         jac_coord!(ncl_cons_res, x, vals)
         @test vals == [1, 1, -1, -1, 2, 1, 1, 1, 1, 1, 1, 1]
         x = [1.0, 0.5, 1.0, 1.0, 0.0, -1.0]
