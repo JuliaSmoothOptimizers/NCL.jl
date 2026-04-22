@@ -10,6 +10,9 @@ export IpoptNCLSubSolver
 export KnitroNCLSubSolver
 export MadNLPNCLSubSolver
 
+include("NCLModel.jl")
+include("NCLSolve.jl")
+
 @doc (@doc AbstractNCLSubSolver) IpoptNCLSubSolver
 function IpoptNCLSubSolver(args...; kwargs...)
   error(
@@ -30,8 +33,5 @@ function MadNLPNCLSubSolver(args...; kwargs...)
     "MadNLP support is not loaded. Install and load MadNLP.jl in your environment to use MadNLPNCLSubSolver.",
   )
 end
-
-include("NCLModel.jl")
-include("NCLSolve.jl")
 
 end

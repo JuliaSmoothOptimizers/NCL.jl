@@ -40,11 +40,11 @@ elapsed_time(sub::AbstractNCLSubSolver) = sub.stats.elapsed_time
 failed(stats::AbstractExecutionStats) = stats.status != :first_order
 
 """
-    NCLSolve(ncl::AbstractNLPModel; kwargs...)
+    NCLSolve(ncl::NCLModel; kwargs...)
     NCLSolve(nlp::AbstractNLPModel; kwargs...)
 
 Solve problem `ncl` using Algorithm NCL.
-If `nlp` is not already an `NCLModel`, it will be converted to one.
+If `nlp` is not already an `NCLModel`, it will be converted to one, and the default subproblem solver will be used.
 If `nlp` does not have constraints other than bound constraints, an error will be thrown.
 In that case, `nlp` should be passed directly to an unconstrained or bound-constrained solver.
 It could also be passed directly to one of the NCL subproblem solvers that are currently supported.
