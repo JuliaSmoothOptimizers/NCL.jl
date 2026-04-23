@@ -45,11 +45,15 @@ function (sub::UnoNCLSubSolver)(
   copyto!(get_x0(ncl_model), x0)
   copyto!(get_y0(ncl_model), sub.stats.multipliers)
 
+  stationarity_tolerance = max(rel_tol, sub.dfeas_abs_tol)
+  primal_feasibility_tolerance = max(rel_tol, sub.pfeas_abs_tol)
+  tolerance = max(rel_tol, sub.compl_abs_tol)
+
   uno_stats = UnoSolver.uno(
     ncl_model;
-    stationarity_tolerance = rel_tol,
-    primal_feasibility_tolerance = rel_tol,
-    tolerance = rel_tol,
+    stationarity_tolerance = stationarity_tolerance,
+    primal_feasibility_tolerance = primal_feasibility_tolerance,
+    tolerance = tolerance,
     kwargs...,
   )
 
