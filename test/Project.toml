@@ -9,6 +9,7 @@ NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
 OptimizationProblems = "5049e819-d29b-5fba-b941-0eee7e64c1c6"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ UnoSolver = "1baa60ac-02f7-4b39-a7a8-2f4f58486b05"
 
 [compat]
 NCL = "0.1"
@@ -19,3 +20,4 @@ NLPModels = "0.20, 0.21"
 NLPModelsIpopt = "0.11"
 NLPModelsTest = "0.10"
 OptimizationProblems = "0.9"
+ UnoSolver = "0.3"

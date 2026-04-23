@@ -9,6 +9,7 @@ using SolverCore
 export IpoptNCLSubSolver
 export KnitroNCLSubSolver
 export MadNLPNCLSubSolver
+export UnoNCLSubSolver
 
 include("NCLModel.jl")
 include("NCLSolve.jl")
@@ -31,6 +32,13 @@ end
 function MadNLPNCLSubSolver(args...; kwargs...)
   error(
     "MadNLP support is not loaded. Install and load MadNLP.jl in your environment to use MadNLPNCLSubSolver.",
+  )
+end
+
+@doc (@doc AbstractNCLSubSolver) UnoNCLSubSolver
+function UnoNCLSubSolver(args...; kwargs...)
+  error(
+    "Uno support is not loaded. Install and load UnoSolver.jl in your environment to use UnoNCLSubSolver.",
   )
 end
 

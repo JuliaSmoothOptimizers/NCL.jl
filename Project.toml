@@ -14,11 +14,13 @@ KNITRO = "67920dd8-b58e-52a8-8622-53c4cffbe346"
 MadNLP = "2621e9c9-9eb4-46b1-8089-e8c72242dfb6"
 NLPModelsIpopt = "f4238b75-b362-5c4c-b852-0801c9a21d71"
 NLPModelsKnitro = "bec4dd0d-7755-52d5-9a02-22f0ffc7efcb"
+UnoSolver = "1baa60ac-02f7-4b39-a7a8-2f4f58486b05"
 
 [extensions]
 NCLIpoptExt = "NLPModelsIpopt"
 NCLKnitroExt = ["KNITRO", "NLPModelsKnitro"]
 NCLMadNLPExt = ["MadNLP"]
+NCLUnoExt = ["UnoSolver"]
 
 [compat]
 KNITRO = "1"
@@ -27,4 +29,5 @@ NLPModels = "0.20, 0.21"
 NLPModelsIpopt = "0.11"
 NLPModelsKnitro = "0.9, 0.10"
 SolverCore = "0.3"
+UnoSolver = "0.3"
 julia = "1.10"

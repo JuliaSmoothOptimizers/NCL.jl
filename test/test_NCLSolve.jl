@@ -2,6 +2,7 @@
   @test_throws ErrorException IpoptNCLSubSolver()
   @test_throws ErrorException KnitroNCLSubSolver()
   @test_throws ErrorException MadNLPNCLSubSolver()
+  @test_throws ErrorException UnoNCLSubSolver()
 end
 
 @testset "Unconstrained problem errors out" begin
@@ -64,6 +65,7 @@ end
 end
 
 using MadNLP
+using UnoSolver
 
 @testset "MadNLP solver available" begin
   model = hs16()
@@ -72,11 +74,26 @@ using MadNLP
   @test NCL.name(sub) == "MadNLP"
 end
 
+@testset "Uno solver available" begin
+  model = hs16()
+  ncl_model = NCLModel(model)
+  sub = UnoNCLSubSolver(ncl_model)
+  @test NCL.name(sub) == "UNO"
+end
+
 @testset "Simple solve with MadNLP" begin
   model = hs16()
   ncl_model = NCLModel(model)
   sub = MadNLPNCLSubSolver(ncl_model)
   stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+  @test stats.status == :first_order
+end
+
+@testset "Simple solve with Uno" begin
+  model = hs16()
+  ncl_model = NCLModel(model)
+  sub = UnoNCLSubSolver(ncl_model)
+  stats = NCLSolve(ncl_model, subsolver = sub, verbose = false, preset = "ipopt")
   @test stats.status == :first_order
 end
 
