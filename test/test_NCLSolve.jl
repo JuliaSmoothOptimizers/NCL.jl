@@ -34,7 +34,7 @@ end
   model = hs16()
   ncl_model = NCLModel(model)
   subsolver = IpoptNCLSubSolver(ncl_model)
-  stats = subsolver(ncl_model, 0, 1.0e-5)
+  stats = subsolver(ncl_model, 1, 1.0e-5)
   @test !NCL.failed(stats)
 end
 
@@ -84,7 +84,7 @@ end
   model = hs16()
   ncl_model = NCLModel(model)
   subsolver = MadNLPNCLSubSolver(ncl_model)
-  stats = subsolver(ncl_model, 0, 1.0e-5)
+  stats = subsolver(ncl_model, 1, 1.0e-5)
   @test !NCL.failed(stats)
 end
 
