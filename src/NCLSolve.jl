@@ -86,7 +86,6 @@ function NCLSolve(
   end
 
   nlp = get_nlp(ncl)
-  NLPModels.reset!(nlp)
   NLPModels.reset!(ncl)
 
   nx = get_nx(ncl)
@@ -188,7 +187,7 @@ function NCLSolve(
     else
       ρ = get_penalty_parameter(ncl)
       set_penalty_parameter!(ncl, min(ρ * τ_ρ, ρ_max))
-      if ρ == ρ_max
+      if get_penalty_parameter(ncl) == ρ_max
         infeasible = !isfinite(rNorm) || rNorm > feas_tol
         if infeasible && isfinite(rNorm)
           @warn "\nin NCLSolve($(get_name(nlp))): maximum penalty ρ = " *

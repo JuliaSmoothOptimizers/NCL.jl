@@ -61,13 +61,63 @@ NLPModels.reset!(ncl::NCLModel) = begin
   ncl
 end
 
+"""
+    get_nlp(ncl::NCLModel)
+
+Return the underlying model of `ncl`.
+"""
 get_nlp(ncl::NCLModel) = ncl.nlp
+
+"""
+     get_nx(ncl::NCLModel)
+
+Return the number of variables in the original problem (not including residuals).
+"""
 get_nx(ncl::NCLModel) = ncl.nx
+
+"""
+     get_nr(ncl::NCLModel)
+
+Return the number of residuals added in the NCL problem (equal to the number of constraints in the original problem if `resid_linear` is `true`, and to the number of nonlinear constraints otherwise).
+"""
 get_nr(ncl::NCLModel) = ncl.nr
+
+"""
+    get_penalty_parameter(ncl::NCLModel)
+
+Return the current value of the penalty parameter ρ.
+"""
 get_penalty_parameter(ncl::NCLModel) = ncl.ρ
-set_penalty_parameter!(ncl::NCLModel{T, S, M}, ρ::T) where {T, S, M} = ncl.ρ = max(ρ, zero(T))
+
+"""
+    set_penalty_parameter!(ncl::NCLModel, ρ)
+
+Set the penalty parameter to ρ > 0.
+"""
+set_penalty_parameter!(ncl::NCLModel{T, S, M}, ρ::T) where {T, S, M} = begin
+  ρ > 0 || error("penalty parameter must be positive")
+  ncl.ρ = ρ
+end
+
+"""
+    get_multipliers(ncl::NCLModel)
+
+Return the current vector of Lagrange multiplier estimates y.
+"""
 get_multipliers(ncl::NCLModel) = ncl.y
+
+"""
+     add_to_multipliers!(ncl::NCLModel, α, v)
+
+Update the Lagrange multiplier estimates by y ← y + α v, where α is a scalar and v is a vector of the same length as y.
+"""
 add_to_multipliers!(ncl::NCLModel{T, S, M}, α::T, v::S) where {T, S, M} = ncl.y .+= α .* v
+
+"""
+     get_resid_linear(ncl::NCLModel)
+
+Return whether or not the residuals are added to linear constraints (if `true`, residuals are added to linear constraints; if `false`, residuals are added to nonlinear constraints only).
+"""
 get_resid_linear(ncl::NCLModel) = ncl.resid_linear
 
 # constructor
