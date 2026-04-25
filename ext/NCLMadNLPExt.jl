@@ -52,7 +52,7 @@ function (sub::MadNLPNCLSubSolver)(
   ::NCLModel,  # MadNLP stores the problem inside the solver; this argument is only here for compatibility with the API
   outer_iter::Int,
   rel_tol::Float64;
-  x0::AbstractVector = get_x0(sub.nlp),
+  x0::AbstractVector = get_x0(sub.solver.nlp),
   kwargs...,
 )
 

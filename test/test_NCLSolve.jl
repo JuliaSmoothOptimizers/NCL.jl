@@ -30,6 +30,14 @@ using OptimizationProblems, OptimizationProblems.ADNLPProblems
   @test NCL.name(sub) == "IPOPT"
 end
 
+@testset "IPOPT solves one NCL problem" begin
+  model = hs16()
+  ncl_model = NCLModel(model)
+  subsolver = IpoptNCLSubSolver(ncl_model)
+  stats = subsolver(ncl_model, 0, 1.0e-5)
+  @test !NCL.failed(stats)
+end
+
 @testset "IPOPT solver only supports Float64" begin
   model = hs16(; type = Float32)
   ncl_model = NCLModel(model)
@@ -70,6 +78,14 @@ using MadNLP
   ncl_model = NCLModel(model)
   sub = MadNLPNCLSubSolver(ncl_model)
   @test NCL.name(sub) == "MadNLP"
+end
+
+@testset "MadNLP solves one NCL problem" begin
+  model = hs16()
+  ncl_model = NCLModel(model)
+  subsolver = MadNLPNCLSubSolver(ncl_model)
+  stats = subsolver(ncl_model, 0, 1.0e-5)
+  @test !NCL.failed(stats)
 end
 
 @testset "Simple solve with MadNLP" begin
