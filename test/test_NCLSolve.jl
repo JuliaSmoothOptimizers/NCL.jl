@@ -139,6 +139,8 @@ catch
 end
 
 if knitro_available
+  @info "KNITRO is available. Running KNITRO tests."
+
   using NLPModelsKnitro
 
   @testset "KNITRO solver available" begin
