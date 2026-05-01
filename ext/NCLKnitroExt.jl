@@ -25,9 +25,10 @@ function NCL.KnitroNCLSubSolver(
   ncl_model::NCLModel{Float64, S, M};
   dfeas_abs_tol::Float64 = 0.1,  # KNITRO stops when relative AND absolute tolerances are met.
   pfeas_abs_tol::Float64 = 0.1,  # Set them to loose values by default.
+  kwargs...,
 ) where {S, M <: AbstractNLPModel{Float64, S}}
   @debug "initializing KNITRO subproblem solver"
-  solver = KnitroSolver(ncl_model)
+  solver = KnitroSolver(ncl_model; kwargs...)
   stats = GenericExecutionStats(ncl_model)
   z = similar(get_x0(ncl_model))
   return KnitroNCLSubSolver(solver, stats, dfeas_abs_tol, pfeas_abs_tol, 0.0, "KNITRO", z)
@@ -80,8 +81,8 @@ function (sub::KnitroNCLSubSolver)(
   zU0 = sub.stats.multipliers_U
   sub.z .= zL0 .- zU0
 
-  set_params!(
-    sub.solver,
+  setparams!(
+    sub.solver;
     x0 = x0,
     y0 = y0,
     z0 = sub.z,

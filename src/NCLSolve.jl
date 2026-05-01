@@ -18,6 +18,9 @@ NCL subproblem solvers conform to the following API:
 - `pfeas_abs_tol::eltype(ncl_model)`: the absolute tolerance on primal feasibility;
 - `compl_abs_tol::eltype(ncl_model)`: the absolute tolerance on complementarity.
 
+Additional keyword arguments are passed to the inner solver constructor.
+Such arguments can be used, e.g., with the KnitroNCLSubSolver to set `linear_api = false` in case the model type used does not support the linear API (e.g., an `AmplModel`).
+
 ## Solver arguments
 
 - `ncl_model::NCLModel`: the NCL model to be solved as a subproblem;
