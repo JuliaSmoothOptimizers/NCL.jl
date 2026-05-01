@@ -127,3 +127,48 @@ end
   stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
   @test stats.status == :first_order
 end
+
+using KNITRO
+
+if KNITRO.has_knitro()
+  using NLPModelsKnitro
+
+  @testset "KNITRO solver available" begin
+    model = hs16()
+    ncl_model = NCLModel(model)
+    sub = KnitroNCLSubSolver(ncl_model)
+    @test NCL.name(sub) == "KNITRO"
+  end
+
+  @testset "KNITRO solves one NCL problem" begin
+    model = hs16()
+    ncl_model = NCLModel(model)
+    subsolver = KnitroNCLSubSolver(ncl_model)
+    stats = subsolver(ncl_model, 1, 1.0e-5)
+    @test !NCL.failed(stats)
+  end
+
+  @testset "Simple solve with KNITRO" begin
+    model = hs16()
+    ncl_model = NCLModel(model)
+    sub = KnitroNCLSubSolver(ncl_model)
+    stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+    @test stats.status == :first_order
+  end
+
+  @testset "Simple TAX problem with KNITRO" begin
+    model = AmplModel(joinpath(@__DIR__, "..", "data", "tax1D.nl"))
+    ncl_model = NCLModel(model)
+    sub = KnitroNCLSubSolver(ncl_model, linear_api = false)
+    stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+    @test stats.status == :first_order
+  end
+
+  @testset "Simple MPEC with KNITRO" begin
+    model = AmplModel(joinpath(@__DIR__, "..", "data", "simplempec.nl"))
+    ncl_model = NCLModel(model)
+    sub = KnitroNCLSubSolver(ncl_model, linear_api = false)
+    stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+    @test stats.status == :first_order
+  end
+end
