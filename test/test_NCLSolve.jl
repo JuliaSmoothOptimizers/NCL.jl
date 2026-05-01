@@ -130,7 +130,15 @@ end
 
 using KNITRO
 
-if KNITRO.has_knitro()
+knitro_available = try
+  # KNITRO.has_knitro() returns true even if there is no valid license, and seems fairly useless
+  KNITRO.KN_new()
+  true
+catch
+  false
+end
+
+if knitro_available
   using NLPModelsKnitro
 
   @testset "KNITRO solver available" begin
@@ -171,4 +179,6 @@ if KNITRO.has_knitro()
     stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
     @test stats.status == :first_order
   end
+else
+  @warn "KNITRO not available. Skipping KNITRO tests."
 end
