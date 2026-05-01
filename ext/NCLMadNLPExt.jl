@@ -19,9 +19,9 @@ mutable struct MadNLPNCLSubSolver{T <: Real} <: AbstractNCLSubSolver
 end
 
 # ... constructor
-function NCL.MadNLPNCLSubSolver(ncl_model::NCLModel)
+function NCL.MadNLPNCLSubSolver(ncl_model::NCLModel; kwargs...)
   @debug "initializing MadNLP subproblem solver"
-  solver = MadNLPSolver(ncl_model, print_level = MadNLP.ERROR)
+  solver = MadNLPSolver(ncl_model, print_level = MadNLP.ERROR; kwargs...)
   stats = MadNLP.MadNLPExecutionStats(solver)
   return MadNLPNCLSubSolver(solver, stats, zero(eltype(ncl_model)), "MadNLP")
 end
