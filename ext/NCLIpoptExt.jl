@@ -25,6 +25,7 @@ function NCL.IpoptNCLSubSolver(
   dfeas_abs_tol::Float64 = 0.1,  # IPOPT stops when relative AND absolute tolerances are met.
   pfeas_abs_tol::Float64 = 0.1,  # Set them to loose values by default.
   compl_abs_tol::Float64 = 0.1,
+  kwargs...,
 ) where {S, M <: AbstractNLPModel{Float64, S}}
   @debug "initializing IPOPT subproblem solver"
   solver = IpoptSolver(ncl_model)
