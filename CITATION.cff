@@ -9,6 +9,10 @@ authors:
     given-names: Ding
   - family-names: Saunders
     given-names: Michael A.
+  - family-names: Kapoor
+    given-names: Arnav
+  - family-names: Personnaz
+    given-names: Pierre-Élie
 version: "0.1.0"
 repository-code: "https://github.com/JuliaSmoothOptimizers/NCL.jl"
 url: "https://JuliaSmoothOptimizers.github.io/NCL.jl/stable"
