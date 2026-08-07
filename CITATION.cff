@@ -1,0 +1,79 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "NCL.jl: A Julia Implementation of Algorithm NCL for Constrained Optimization"
+authors:
+  - family-names: Orban
+    given-names: Dominique
+    orcid: "https://orcid.org/0000-0002-8017-7687"
+  - family-names: Ma
+    given-names: Daiana
+  - family-names: Saunders
+    given-names: Michael A.
+version: "0.1.0"
+repository-code: "https://github.com/JuliaSmoothOptimizers/NCL.jl"
+url: "https://JuliaSmoothOptimizers.github.io/NCL.jl/stable"
+license: MPL-2.0
+abstract: >
+  An implementation of Algorithm NCL for constrained nonlinear optimization
+  in pure Julia, supporting subproblem solvers IPOPT, Artelys KNITRO, and
+  MadNLP via the NLPModels API.
+keywords:
+  - nonlinear optimization
+  - constrained optimization
+  - NCL algorithm
+  - Julia
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Ma
+      given-names: Daiana
+    - family-names: Orban
+      given-names: Dominique
+      orcid: "https://orcid.org/0000-0002-8017-7687"
+    - family-names: Saunders
+      given-names: Michael A.
+  title: "A Julia Implementation of Algorithm NCL for Constrained Optimization"
+  year: 2021
+  doi: "10.1007/978-3-030-72040-7_8"
+  collection-title: "Numerical Analysis and Optimization"
+  collection-doi: "10.1007/978-3-030-72040-7"
+  volume: 354
+  start: 153
+  end: 181
+  publisher:
+    name: Springer
+references:
+  - type: article
+    authors:
+      - family-names: Ma
+        given-names: D.
+      - family-names: Judd
+        given-names: K.
+      - family-names: Orban
+        given-names: D.
+      - family-names: Saunders
+        given-names: M.
+    title: "Stabilized optimization via an NCL algorithm"
+    year: 2018
+    doi: "10.1007/978-3-319-90026-1_8"
+    collection-title: "Numerical Analysis and Optimization"
+    volume: 235
+    start: 173
+    end: 191
+    publisher:
+      name: Springer International Publishing
+  - type: article
+    authors:
+      - family-names: Ma
+        given-names: D.
+      - family-names: Orban
+        given-names: D.
+      - family-names: Saunders
+        given-names: M. A.
+    title: "Solving Algorithm NCL's Subproblems: The Need for Interior Methods"
+    year: 2025
+    doi: "10.1007/s10013-025-00760-z"
+    journal: "Vietnam Journal of Mathematics"
+    volume: 53
+    start: 915
+    end: 919
