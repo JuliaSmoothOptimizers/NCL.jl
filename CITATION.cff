@@ -6,7 +6,7 @@ authors:
     given-names: Dominique
     orcid: "https://orcid.org/0000-0002-8017-7687"
   - family-names: Ma
-    given-names: Daiana
+    given-names: Ding
   - family-names: Saunders
     given-names: Michael A.
 version: "0.1.0"
@@ -26,7 +26,7 @@ preferred-citation:
   type: article
   authors:
     - family-names: Ma
-      given-names: Daiana
+      given-names: Ding
     - family-names: Orban
       given-names: Dominique
       orcid: "https://orcid.org/0000-0002-8017-7687"
