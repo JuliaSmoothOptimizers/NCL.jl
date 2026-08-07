@@ -27,7 +27,7 @@ keywords:
   - NCL algorithm
   - Julia
 preferred-citation:
-  type: article
+  type: book
   authors:
     - family-names: Ma
       given-names: Ding
@@ -47,7 +47,7 @@ preferred-citation:
   publisher:
     name: Springer
 references:
-  - type: article
+  - type: book
     authors:
       - family-names: Ma
         given-names: D.
