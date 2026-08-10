@@ -22,7 +22,7 @@ NCLMadNLPExt = ["MadNLP"]
 
 [compat]
 KNITRO = "1"
-MadNLP = "0.9"
+MadNLP = "0.9, 0.10"
 NLPModels = "0.20, 0.21"
 NLPModelsIpopt = "0.11"
 NLPModelsKnitro = "0.10.5, 0.10.6"
