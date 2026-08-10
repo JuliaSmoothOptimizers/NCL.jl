@@ -27,27 +27,26 @@ keywords:
   - constrained optimization
   - NCL algorithm
   - Julia
-preferred-citation:
-  type: book
-  authors:
-    - family-names: Ma
-      given-names: Ding
-    - family-names: Orban
-      given-names: Dominique
-      orcid: "https://orcid.org/0000-0002-8017-7687"
-    - family-names: Saunders
-      given-names: Michael A.
-  title: "A Julia Implementation of Algorithm NCL for Constrained Optimization"
-  year: 2021
-  doi: "10.1007/978-3-030-72040-7_8"
-  collection-title: "Numerical Analysis and Optimization"
-  collection-doi: "10.1007/978-3-030-72040-7"
-  volume: 354
-  start: 153
-  end: 181
-  publisher:
-    name: Springer
 references:
+  - type: book
+    authors:
+      - family-names: Ma
+        given-names: Ding
+      - family-names: Orban
+        given-names: Dominique
+        orcid: "https://orcid.org/0000-0002-8017-7687"
+      - family-names: Saunders
+        given-names: Michael A.
+    title: "A Julia Implementation of Algorithm NCL for Constrained Optimization"
+    year: 2021
+    doi: "10.1007/978-3-030-72040-7_8"
+    collection-title: "Numerical Analysis and Optimization"
+    collection-doi: "10.1007/978-3-030-72040-7"
+    volume: 354
+    start: 153
+    end: 181
+    publisher:
+      name: Springer
   - type: book
     authors:
       - family-names: Ma
