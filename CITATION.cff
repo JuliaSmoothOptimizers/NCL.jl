@@ -11,6 +11,7 @@ authors:
     given-names: Michael A.
   - family-names: Kapoor
     given-names: Arnav
+    orcid: "https://orcid.org/0009-0007-9818-7908"
   - family-names: Personnaz
     given-names: Pierre-Élie
 version: "0.1.0"
