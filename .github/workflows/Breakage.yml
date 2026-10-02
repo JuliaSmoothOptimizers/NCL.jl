@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
   breakage:
     uses: JuliaSmoothOptimizers/.github/.github/workflows/Breakage.yml@main
