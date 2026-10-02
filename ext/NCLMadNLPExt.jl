@@ -9,8 +9,6 @@ using SolverCore
 SolverCore.reset!(::MadNLP.MadNLPExecutionStats) = nothing
 SolverCore.set_multipliers!(::MadNLP.MadNLPExecutionStats, args...) = nothing
 
-NCL.failed(stats::MadNLP.MadNLPExecutionStats) = stats.status != MadNLP.SOLVE_SUCCEEDED
-
 mutable struct MadNLPNCLSubSolver{T <: Real} <: AbstractNCLSubSolver
   solver::MadNLPSolver
   stats::MadNLP.MadNLPExecutionStats
@@ -26,7 +24,12 @@ function NCL.MadNLPNCLSubSolver(ncl_model::NCLModel; kwargs...)
   return MadNLPNCLSubSolver(solver, stats, zero(eltype(ncl_model)), "MadNLP")
 end
 
+# MadNLPExecutionStats has no elapsed_time field; read from the solver's counter instead.
 NCL.elapsed_time(sub::MadNLPNCLSubSolver) = sub.solver.cnt.total_time
+
+# MadNLPExecutionStats.status is a MadNLP.Status enum, not a Julia symbol.
+NCL.failed(stats::MadNLP.MadNLPExecutionStats) =
+  stats.status ∉ (MadNLP.SOLVE_SUCCEEDED, MadNLP.SOLVED_TO_ACCEPTABLE_LEVEL)
 
 const madnlp_fixed_options = Dict(:max_iter => 100, :dual_initialized => true)
 
