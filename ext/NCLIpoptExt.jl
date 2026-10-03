@@ -71,9 +71,16 @@ function (sub::IpoptNCLSubSolver)(
   sub.mu_init = compute_mu_init(outer_iter)
 
   # warm-starting multipliers appears to help IPOPT
+  # IPOPT writes nvar bound multipliers into the arrays passed as zL0 and zU0,
+  # so they must have full length even when sub.stats stores empty ones.
   y0 = sub.stats.multipliers
-  zL0 = sub.stats.multipliers_L
-  zU0 = sub.stats.multipliers_U
+  if has_bounds(ncl_model)
+    zL0 = sub.stats.multipliers_L
+    zU0 = sub.stats.multipliers_U
+  else
+    zL0 = zeros(get_nvar(ncl_model))
+    zU0 = zeros(get_nvar(ncl_model))
+  end
   return NLPModelsIpopt.solve!(
     sub.solver,
     ncl_model,

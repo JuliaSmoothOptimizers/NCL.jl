@@ -184,6 +184,15 @@ if knitro_available
     @test stats.status == :first_order
   end
 
+  @testset "Solve problem without variable bounds with KNITRO" begin
+    model = ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
+    ncl_model = NCLModel(model)
+    sub = KnitroNCLSubSolver(ncl_model)
+    stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+    @test stats.status == :first_order
+    @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5); atol = 1.0e-5)
+  end
+
   @testset "Simple TAX problem with KNITRO" begin
     model = AmplModel(joinpath(@__DIR__, "..", "data", "tax1D.nl"))
     ncl_model = NCLModel(model)
