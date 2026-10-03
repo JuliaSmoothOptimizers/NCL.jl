@@ -52,6 +52,17 @@ end
   @test stats.status == :first_order
 end
 
+@testset "Solve a maximization problem with IPOPT" begin
+  # maximize -‖x - (1, 2)‖² subject to ‖x‖² ≤ 1: the solution is (1, 2) / √5.
+  f(x) = -(x[1] - 1)^2 - (x[2] - 2)^2
+  c(x) = [x[1]^2 + x[2]^2]
+  model = ADNLPModel(f, [0.0, 0.0], [-2.0, -2.0], [2.0, 2.0], c, [-Inf], [1.0]; minimize = false)
+  stats = NCLSolve(model; verbose = false)
+  @test stats.status == :first_order
+  @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5), atol = 1.0e-4)
+  @test isapprox(stats.objective, -(sqrt(5) - 1)^2, atol = 1.0e-4)
+end
+
 @testset "Declare infeasibility at max penalty" begin
   # x is fixed at 0, while x + r == 100 forces a persistent residual r = 100.
   f(x) = zero(eltype(x))
