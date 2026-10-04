@@ -77,9 +77,11 @@ function (sub::KnitroNCLSubSolver)(
 
   # warm-starting multipliers doesn't seem to help KNITRO
   y0 = sub.stats.multipliers
-  zL0 = sub.stats.multipliers_L
-  zU0 = sub.stats.multipliers_U
-  sub.z .= zL0 .- zU0
+  if has_bounds(ncl_model)
+    sub.z .= sub.stats.multipliers_L .- sub.stats.multipliers_U
+  else
+    fill!(sub.z, 0)  # sub.stats stores empty bound multipliers
+  end
 
   setparams!(
     sub.solver;
