@@ -67,7 +67,9 @@ function (sub::IpoptNCLSubSolver)(
 
   # prepare for warm start
   # TODO: try solver.mu from the previous solve
-  # TODO: set bound_push?
+  # Unlike MadNLP and KNITRO, IPOPT keeps its default warm_start_bound_push here:
+  # setting it to mu_init had no effect on the tax problems, and setting
+  # warm_start_mult_bound_push to mu_init made tax2D converge to a worse point.
   sub.mu_init = compute_mu_init(outer_iter)
 
   # warm-starting multipliers appears to help IPOPT
