@@ -13,6 +13,8 @@ mutable struct IpoptNCLSubSolver <: AbstractNCLSubSolver
   compl_abs_tol::Float64
   mu_init::Float64  # just for logging
   name::String
+  zL0::Vector{Float64}  # zero bound multipliers to warm start IPOPT
+  zU0::Vector{Float64}  # when ncl_model has no bounds
 end
 
 # ... constructor
@@ -30,7 +32,18 @@ function NCL.IpoptNCLSubSolver(
   @debug "initializing IPOPT subproblem solver"
   solver = IpoptSolver(ncl_model)
   stats = GenericExecutionStats(ncl_model)
-  return IpoptNCLSubSolver(solver, stats, dfeas_abs_tol, pfeas_abs_tol, compl_abs_tol, 0.0, "IPOPT")
+  nz = has_bounds(ncl_model) ? 0 : get_nvar(ncl_model)
+  return IpoptNCLSubSolver(
+    solver,
+    stats,
+    dfeas_abs_tol,
+    pfeas_abs_tol,
+    compl_abs_tol,
+    0.0,
+    "IPOPT",
+    zeros(nz),
+    zeros(nz),
+  )
 end
 
 const ipopt_fixed_options = Dict(
@@ -71,9 +84,16 @@ function (sub::IpoptNCLSubSolver)(
   sub.mu_init = compute_mu_init(outer_iter)
 
   # warm-starting multipliers appears to help IPOPT
+  # NLPModelsIpopt copies zL0 and zU0 into buffers that IPOPT fills with nvar values,
+  # so they must have full length even when sub.stats stores empty ones.
   y0 = sub.stats.multipliers
-  zL0 = sub.stats.multipliers_L
-  zU0 = sub.stats.multipliers_U
+  if has_bounds(ncl_model)
+    zL0 = sub.stats.multipliers_L
+    zU0 = sub.stats.multipliers_U
+  else
+    zL0 = sub.zL0
+    zU0 = sub.zU0
+  end
   return NLPModelsIpopt.solve!(
     sub.solver,
     ncl_model,
