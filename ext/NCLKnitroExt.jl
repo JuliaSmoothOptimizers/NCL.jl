@@ -71,7 +71,6 @@ function (sub::KnitroNCLSubSolver)(
 
   # prepare for warm start
   # TODO: try solver.mu from the previous solve
-  # TODO: set bound_push?
   sub.mu_init = compute_mu_init(outer_iter)
   bar_slackboundpush = sub.mu_init
 
