@@ -54,11 +54,23 @@ end
 
 @testset "Solve problem without variable bounds with IPOPT" begin
   # Neither x nor the residuals are bounded: projection of (1, 2) onto the unit disk.
-  model = ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
+  model =
+    ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
   @test !has_bounds(model)
   stats = NCLSolve(model; verbose = false)
   @test stats.status == :first_order
   @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5); atol = 1.0e-5)
+end
+
+@testset "Solve a maximization problem with IPOPT" begin
+  # maximize -‖x - (1, 2)‖² subject to ‖x‖² ≤ 1: the solution is (1, 2) / √5.
+  f(x) = -(x[1] - 1)^2 - (x[2] - 2)^2
+  c(x) = [x[1]^2 + x[2]^2]
+  model = ADNLPModel(f, [0.0, 0.0], [-2.0, -2.0], [2.0, 2.0], c, [-Inf], [1.0]; minimize = false)
+  stats = NCLSolve(model; verbose = false)
+  @test stats.status == :first_order
+  @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5), atol = 1.0e-4)
+  @test isapprox(stats.objective, -(sqrt(5) - 1)^2, atol = 1.0e-4)
 end
 
 @testset "Declare infeasibility at max penalty" begin
@@ -106,7 +118,8 @@ end
 end
 
 @testset "Solve problem without variable bounds with MadNLP" begin
-  model = ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
+  model =
+    ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
   ncl_model = NCLModel(model)
   sub = MadNLPNCLSubSolver(ncl_model)
   stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
@@ -185,7 +198,13 @@ if knitro_available
   end
 
   @testset "Solve problem without variable bounds with KNITRO" begin
-    model = ADNLPModel(x -> (x[1] - 1)^2 + (x[2] - 2)^2, [0.0, 0.0], x -> [x[1]^2 + x[2]^2], [-Inf], [1.0])
+    model = ADNLPModel(
+      x -> (x[1] - 1)^2 + (x[2] - 2)^2,
+      [0.0, 0.0],
+      x -> [x[1]^2 + x[2]^2],
+      [-Inf],
+      [1.0],
+    )
     ncl_model = NCLModel(model)
     sub = KnitroNCLSubSolver(ncl_model)
     stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)

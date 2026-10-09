@@ -489,4 +489,31 @@ function test_NCLModel()
   @testset "NLPModelsTest dimension check, resid_linear = true, linear_api = false" begin
     check_nlp_dimensions(ncl_cons_res, linear_api = false)
   end
+
+  @testset "NCLModel of a maximization problem" begin
+    fmax(x) = x[1] * x[2] - x[1]^2 - 2 * x[2]^2
+    cmax(x) = [x[1]^2 + x[2], x[1] * x[2]]
+    nlp_max = ADNLPModel(fmax, x0, lvar, uvar, A, cmax, lcon, ucon; minimize = false)
+    nlp_min = ADNLPModel(x -> -fmax(x), x0, lvar, uvar, A, cmax, lcon, ucon)
+
+    for resid_linear ∈ (false, true)
+      nr = resid_linear ? 4 : 2
+      y = collect(1.0:nr)
+      ncl_max = NCLModel(nlp_max; resid = 1.0, ρ = 2.0, resid_linear = resid_linear, y = y)
+      ncl_min = NCLModel(nlp_min; resid = 1.0, ρ = 2.0, resid_linear = resid_linear, y = copy(y))
+      @test get_minimize(ncl_max)
+
+      xr = [0.3, 0.7, collect(range(-1.0, 1.0, length = nr))...]
+      yc = [1.0, -2.0, 0.5, 3.0]
+      v = collect(range(1.0, 2.0, length = 2 + nr))
+      @test obj(ncl_max, xr) ≈ obj(ncl_min, xr)
+      @test grad(ncl_max, xr) ≈ grad(ncl_min, xr)
+      @test hess_coord(ncl_max, xr; obj_weight = 0.5) ≈ hess_coord(ncl_min, xr; obj_weight = 0.5)
+      @test hess_coord(ncl_max, xr, yc; obj_weight = 0.5) ≈
+            hess_coord(ncl_min, xr, yc; obj_weight = 0.5)
+      @test hprod(ncl_max, xr, v; obj_weight = 0.5) ≈ hprod(ncl_min, xr, v; obj_weight = 0.5)
+      @test hprod(ncl_max, xr, yc, v; obj_weight = 0.5) ≈
+            hprod(ncl_min, xr, yc, v; obj_weight = 0.5)
+    end
+  end
 end
