@@ -44,6 +44,10 @@ function report(io, solver, base, new, rtol)
   changed = df[df.status_base .!= df.status_new, :]
   if nrow(changed) > 0
     println(io, "\nstatus changed:")
+    for g in groupby(changed, [:status_base, :status_new]; sort = true)
+      @printf(io, "  %4d  %-14s → %s\n", nrow(g), g.status_base[1], g.status_new[1])
+    end
+    println(io)
     for r in eachrow(changed)
       @printf(io, "  %-12s %-14s → %s\n", r.problem, r.status_base, r.status_new)
     end
