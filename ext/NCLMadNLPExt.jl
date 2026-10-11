@@ -64,7 +64,8 @@ function (sub::MadNLPNCLSubSolver)(
 )
 
   # prepare for warm start
-  # TODO: try solver.mu from the previous solve
+  # Restarting from the previous solve's final mu does not help: with the loose subproblem
+  # tolerances, the solver stops before decreasing mu, so it ends at the mu_init it started from.
   sub.mu_init = compute_mu_init(outer_iter)
   set_mu_init!(sub.solver.opt, sub.mu_init)
   bound_push = sub.mu_init  # only used by MadNLP on the first solve
