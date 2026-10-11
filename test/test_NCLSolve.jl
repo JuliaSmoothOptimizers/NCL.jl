@@ -124,6 +124,16 @@ end
   @test stats.status == :first_order
 end
 
+@testset "TAX2D with MadNLP" begin
+  # needs MadNLP's per-solve counters to be reset; fails at max penalty otherwise
+  model = AmplModel(joinpath(@__DIR__, "..", "data", "tax2D.nl"))
+  ncl_model = NCLModel(model)
+  sub = MadNLPNCLSubSolver(ncl_model)
+  stats = NCLSolve(ncl_model, subsolver = sub, verbose = false)
+  @test stats.status == :first_order
+  @test stats.objective ≈ -4278.02 rtol = 1.0e-5
+end
+
 @testset "Simple MPEC with IPOPT" begin
   model = AmplModel(joinpath(@__DIR__, "..", "data", "simplempec.nl"))
   ncl_model = NCLModel(model)

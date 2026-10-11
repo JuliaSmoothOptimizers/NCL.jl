@@ -7,7 +7,13 @@ using NLPModels
 using SolverCore
 
 SolverCore.reset!(::MadNLP.MadNLPExecutionStats) = nothing
-SolverCore.set_multipliers!(::MadNLP.MadNLPExecutionStats, args...) = nothing
+# MadNLPExecutionStats starts with uninitialized multipliers; NCLSolve sets them before the first solve.
+function SolverCore.set_multipliers!(stats::MadNLP.MadNLPExecutionStats, y, zL, zU)
+  copyto!(stats.multipliers, y)
+  copyto!(stats.multipliers_L, zL)
+  copyto!(stats.multipliers_U, zU)
+  return stats
+end
 
 mutable struct MadNLPNCLSubSolver{T <: Real} <: AbstractNCLSubSolver
   solver::MadNLPSolver
@@ -74,6 +80,11 @@ function (sub::MadNLPNCLSubSolver)(
   # The problem is stored inside the solver.
   copyto!(get_x0(sub.solver.nlp), x0)  # to warm start the next outer iteration
   copyto!(get_y0(sub.solver.nlp), sub.stats.multipliers)
+
+  # MadNLP never resets its counters on a re-solve: without this, max_iter, max_wall_time,
+  # the reported iteration count and elapsed time all accumulate across outer iterations.
+  sub.solver.cnt.k = 0
+  sub.solver.cnt.start_time = time()
 
   return MadNLP.solve!(
     sub.solver,
