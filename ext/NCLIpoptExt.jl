@@ -66,7 +66,8 @@ function (sub::IpoptNCLSubSolver)(
 )
 
   # prepare for warm start
-  # TODO: try solver.mu from the previous solve
+  # Restarting from the previous solve's final mu does not help: with the loose subproblem
+  # tolerances, the solver stops before decreasing mu, so it ends at the mu_init it started from.
   # Unlike MadNLP and KNITRO, IPOPT keeps its default warm_start_bound_push here:
   # setting it to mu_init had no effect on the tax problems, and setting
   # warm_start_mult_bound_push to mu_init made tax2D converge to a worse point.
