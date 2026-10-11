@@ -48,6 +48,10 @@ compute_mu_init(outer_iter::Int) = outer_iter < 2 ? 1.0e-1 : 1.0e-4
 set_mu_init!(opt, mu_init) =
   hasproperty(opt, :barrier) ? (opt.barrier.mu_init = mu_init) : (opt.mu_init = mu_init)
 
+# MadNLP 0.10 moved mu_init into opt.barrier and silently ignores it as a solve! keyword.
+set_mu_init!(opt, mu_init) =
+  hasproperty(opt, :barrier) ? (opt.barrier.mu_init = mu_init) : (opt.mu_init = mu_init)
+
 # ... solve
 function (sub::MadNLPNCLSubSolver)(
   ::NCLModel,  # MadNLP stores the problem inside the solver; this argument is only here for compatibility with the API
