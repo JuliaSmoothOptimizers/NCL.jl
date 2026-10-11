@@ -50,6 +50,10 @@ function compute_mu_init(outer_iter::Int)
   mu_init
 end
 
+# MadNLP 0.10 moved mu_init into opt.barrier and silently ignores it as a solve! keyword.
+set_mu_init!(opt, mu_init) =
+  hasproperty(opt, :barrier) ? (opt.barrier.mu_init = mu_init) : (opt.mu_init = mu_init)
+
 # ... solve
 function (sub::MadNLPNCLSubSolver)(
   ::NCLModel,  # MadNLP stores the problem inside the solver; this argument is only here for compatibility with the API
@@ -62,7 +66,8 @@ function (sub::MadNLPNCLSubSolver)(
   # prepare for warm start
   # TODO: try solver.mu from the previous solve
   sub.mu_init = compute_mu_init(outer_iter)
-  bound_push = sub.mu_init
+  set_mu_init!(sub.solver.opt, sub.mu_init)
+  bound_push = sub.mu_init  # only used by MadNLP on the first solve
 
   # MadnLP uses info from the problem itself to warm start.
   # The problem is stored inside the solver.
@@ -72,7 +77,6 @@ function (sub::MadNLPNCLSubSolver)(
   return MadNLP.solve!(
     sub.solver,
     sub.stats;
-    mu_init = sub.mu_init,
     bound_push = bound_push,
     tol = rel_tol,
     madnlp_fixed_options...,
