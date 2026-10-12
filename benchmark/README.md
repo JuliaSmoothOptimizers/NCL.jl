@@ -41,3 +41,11 @@ julia --project=benchmark benchmark/compare.jl benchmark/results/main_cutest.csv
 ```
 
 For each solver, `compare.jl` reports the number of problems solved, problems whose status changed, problems where both runs succeed but reach different objectives, and the shifted geometric mean of inner iterations, outer iterations and time over problems both runs solve.
+
+## Figures
+
+```
+julia --project=benchmark benchmark/plots.jl benchmark/results/main_cutest.csv benchmark/results/my-branch_cutest.csv
+```
+
+For each solver, `plots.jl` writes PNG figures to `benchmark/results/figures` (or a directory given as third argument), in the style of the [JSO tutorials](https://jso.dev/tutorials/): final status of both runs, performance profiles drawn with SolverBenchmark's `profile_solvers` for the measures (time, inner and outer iterations) that differ between the runs, and, for sets of at most 30 problems, inner iterations and time per problem.
