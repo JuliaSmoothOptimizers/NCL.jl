@@ -48,4 +48,4 @@ For each solver, `compare.jl` reports the number of problems solved, problems wh
 julia --project=benchmark benchmark/plots.jl benchmark/results/main_cutest.csv benchmark/results/my-branch_cutest.csv
 ```
 
-For each solver, `plots.jl` writes PNG figures to `benchmark/results/figures` (or a directory given as third argument), in the style of the [JSO tutorials](https://jso.dev/tutorials/): final status of both runs, performance profiles drawn with SolverBenchmark's `profile_solvers` for the measures (time, inner and outer iterations) that differ between the runs, and, for sets of at most 30 problems, inner iterations and time per problem.
+For each solver, `plots.jl` writes PNG figures to `benchmark/results/figures` (or a directory given as third argument), in the style of the MadSuite benchmarks: final status of both runs, performance profiles drawn with BenchmarkProfiles for the measures (time, inner and outer iterations) that differ between the runs, and, for sets of at most 30 problems, inner iterations and wall time per problem as grouped bars and wall time against the number of variables.
