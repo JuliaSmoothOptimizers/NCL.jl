@@ -56,13 +56,15 @@ The solver stops under the following circumstances:
 
 1. The norm of the residual variables falls below `feas_tol` and the dual feasibility residual, as reported by the subproblem solver, falls below `opt_tol`;
 2. the maximum number of outer iterations `max_iter_NCL` is attained;
-3. the problem is found to be (locally) infeasible.
+3. the total time spent in subproblems exceeds `max_time`;
+4. the problem is found to be (locally) infeasible.
 
 ## Keyword arguments
 
 - `opt_tol::Float64 = 1.0e-6`: dual feasibility stopping tolerance;
 - `feas_tol::Float64 = 1.0e-6`: primal feasibility stopping tolerance;
 - `max_iter_NCL::Int = 20`: maximum number of outer iterations;
+- `max_time::Float64 = Inf`: maximum total time spent in subproblems, checked after each outer iteration;
 - `subsolver::AbstractNCLSubSolver = IpoptNCLSubSolver(ncl)`: subproblem solver;
 - `verbose::Bool = true`: whether to display progress information at each iteration.
 
@@ -80,6 +82,7 @@ function NCLSolve(
   opt_tol::Float64 = 1.0e-6,
   feas_tol::Float64 = 1.0e-6,
   max_iter_NCL::Int = 20,
+  max_time::Float64 = Inf,
   subsolver::AbstractNCLSubSolver = IpoptNCLSubSolver(ncl),
   verbose::Bool = true,
   kwargs...,  # will be passed directly to inner solver
@@ -144,8 +147,9 @@ function NCLSolve(
   converged = false
   infeasible = false
   tired = k > max_iter_NCL
+  out_of_time = false
 
-  while !(converged || infeasible || tired)
+  while !(converged || infeasible || tired || out_of_time)
     k += 1
 
     # solve subproblem
@@ -220,6 +224,7 @@ function NCLSolve(
 
     converged = rNorm ≤ feas_tol && dual_feas ≤ opt_tol
     tired = k > max_iter_NCL
+    out_of_time = !converged && t > max_time
   end
 
   if converged
@@ -228,6 +233,8 @@ function NCLSolve(
     status = :infeasible
   elseif tired
     status = :max_iter
+  elseif out_of_time
+    status = :max_time
   else
     status = sub_stats.status
   end
@@ -252,6 +259,8 @@ function NCLSolve(
     solver_specific = Dict(
       :internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
       :residuals => r,
+      :outer_iter => k,
+      :sub_status => sub_stats.status,
     ),
   )
   if has_bounds(nlp)
