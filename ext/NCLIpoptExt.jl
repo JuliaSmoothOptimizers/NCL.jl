@@ -39,19 +39,14 @@ const ipopt_fixed_options = Dict(
   :max_iter => 100,
 )
 
-# TODO: need smarter initialization
+# Stopping the decrease at 1e-5 instead of 1e-8 halves the inner iterations on tax2D
+# with the same solution, and lets pTax4D converge instead of failing at max penalty.
 function compute_mu_init(outer_iter::Int)
   mu_init = 1.0e-1
   if 2 <= outer_iter < 4
     mu_init = 1e-4
-  elseif 4 <= outer_iter < 6
+  elseif outer_iter >= 4
     mu_init = 1e-5
-  elseif 6 <= outer_iter < 8
-    mu_init = 1e-6
-  elseif 8 <= outer_iter < 10
-    mu_init = 1e-7
-  elseif outer_iter >= 10
-    mu_init = 1e-8
   end
   mu_init
 end
