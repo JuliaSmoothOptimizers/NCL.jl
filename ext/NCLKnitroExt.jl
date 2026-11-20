@@ -30,7 +30,7 @@ function NCL.KnitroNCLSubSolver(
   @debug "initializing KNITRO subproblem solver"
   solver = KnitroSolver(ncl_model; kwargs...)
   stats = GenericExecutionStats(ncl_model)
-  z = similar(get_x0(ncl_model))
+  z = zeros(get_nvar(ncl_model))  # stays zero if ncl_model has no bounds
   return KnitroNCLSubSolver(solver, stats, dfeas_abs_tol, pfeas_abs_tol, 0.0, "KNITRO", z)
 end
 
@@ -76,9 +76,9 @@ function (sub::KnitroNCLSubSolver)(
 
   # warm-starting multipliers doesn't seem to help KNITRO
   y0 = sub.stats.multipliers
-  zL0 = sub.stats.multipliers_L
-  zU0 = sub.stats.multipliers_U
-  sub.z .= zL0 .- zU0
+  if has_bounds(ncl_model)  # otherwise, sub.stats stores empty bound multipliers
+    sub.z .= sub.stats.multipliers_L .- sub.stats.multipliers_U
+  end
 
   setparams!(
     sub.solver;

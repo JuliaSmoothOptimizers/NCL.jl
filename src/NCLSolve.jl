@@ -112,7 +112,9 @@ function NCLSolve(
   rNorm = norm(r, Inf)
   best_rNorm = rNorm
   y = get_y0(ncl)
-  z = zeros(get_nvar(ncl))
+  # The residual variables are free, so ncl has bounds only if nlp does.
+  # Without bounds, the subsolver stats has empty bound multipliers.
+  z = zeros(has_bounds(ncl) ? get_nvar(ncl) : 0)
 
   # Initialize multipliers in subsolver.stats.
   # The subsolver uses these to warm start.
