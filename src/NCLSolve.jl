@@ -234,7 +234,9 @@ function NCLSolve(
     status = sub_stats.status
   end
   dual_feas = sub_stats.dual_feas
-  primal_feas = η
+  # Constraint violation of the original problem at x.
+  cx = cons(nlp, x)
+  primal_feas = norm(max.(get_lcon(nlp) .- cx, cx .- get_ucon(nlp), 0), Inf)
   if has_bounds(nlp)
     zL = sub_stats.multipliers_L[1:nx]
     zU = sub_stats.multipliers_U[1:nx]
