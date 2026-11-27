@@ -52,6 +52,18 @@ end
   @test stats.status == :first_order
 end
 
+@testset "max_iter_NCL bounds the number of outer iterations" begin
+  # The constraint is imposed twice so that LICQ fails and NCL needs several outer iterations.
+  f(x) = (x[1] - 2)^2 + (x[2] - 1)^2
+  c(x) = [x[1]^2 - x[2], x[1]^2 - x[2]]
+  model = ADNLPModel(f, [0.0, 0.0], [-10.0, -10.0], [10.0, 10.0], c, [-Inf, -Inf], [0.0, 0.0])
+  for max_iter_NCL in (1, 3)
+    stats = NCLSolve(model; max_iter_NCL = max_iter_NCL, verbose = false)
+    @test stats.status == :max_iter
+    @test stats.solver_specific[:outer_iter] == max_iter_NCL
+  end
+end
+
 @testset "Solve a maximization problem with IPOPT" begin
   # maximize -‖x - (1, 2)‖² subject to ‖x‖² ≤ 1: the solution is (1, 2) / √5.
   f(x) = -(x[1] - 1)^2 - (x[2] - 2)^2

@@ -143,7 +143,7 @@ function NCLSolve(
   iter_count = 0
   converged = false
   infeasible = false
-  tired = k > max_iter_NCL
+  tired = k ≥ max_iter_NCL
 
   while !(converged || infeasible || tired)
     k += 1
@@ -219,7 +219,7 @@ function NCLSolve(
     end
 
     converged = rNorm ≤ feas_tol && dual_feas ≤ opt_tol
-    tired = k > max_iter_NCL
+    tired = k ≥ max_iter_NCL
   end
 
   if converged
@@ -252,6 +252,7 @@ function NCLSolve(
     solver_specific = Dict(
       :internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
       :residuals => r,
+      :outer_iter => k,
     ),
   )
   if has_bounds(nlp)
