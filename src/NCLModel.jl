@@ -36,7 +36,7 @@ If `nlp` is a maximization problem, f is replaced by -f above, so that the NCL s
 * `resid::Float64`  the initial residual value (default 0)
 * `resid_linear::Bool`  whether or not residuals are added to linear constraints
 * `ρ::Float64`  initial penalty parameter
-* `y::AbstractVector{Float64}`  initial Lagrange multiplier estimates
+* `y::AbstractVector{Float64}`  initial Lagrange multiplier estimates (default 1 for constraints with only a lower bound, -1 for constraints with only an upper bound, and 0 otherwise)
 
 ### Return value
 
@@ -120,13 +120,24 @@ Return whether or not the residuals are added to linear constraints (if `true`, 
 """
 get_resid_linear(ncl::NCLModel) = ncl.resid_linear
 
+# NCL's estimates converge to -y with ∇f + Jᵀy = 0, so they are positive for active constraints
+# with only a lower bound and negative for those with only an upper bound.
+function default_multipliers(nlp::AbstractNLPModel, resid_linear::Bool)
+  idx = resid_linear ? (1:get_ncon(nlp)) : get_nln(nlp)
+  has_l = isfinite.(get_lcon(nlp)[idx])
+  has_u = isfinite.(get_ucon(nlp)[idx])
+  y = similar(get_x0(nlp), length(idx))
+  y .= (has_l .& .!has_u) .- (has_u .& .!has_l)
+  return y
+end
+
 # constructor
 function NCLModel(
   nlp::AbstractNLPModel{T, S};
   resid::T = zero(T),
   resid_linear::Bool = true,
   ρ::T = one(T),
-  y::S = fill!(similar(get_x0(nlp), resid_linear ? get_ncon(nlp) : get_nnln(nlp)), 1),
+  y::S = default_multipliers(nlp, resid_linear),
 ) where {T, S}
   if unconstrained(nlp) || bound_constrained(nlp)
     @warn(
