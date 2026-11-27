@@ -40,7 +40,7 @@ stats(sub::AbstractNCLSubSolver) = sub.stats
 mu_init(sub::AbstractNCLSubSolver) = sub.mu_init
 elapsed_time(sub::AbstractNCLSubSolver) = sub.stats.elapsed_time
 
-failed(stats::AbstractExecutionStats) = stats.status != :first_order
+failed(stats::AbstractExecutionStats) = stats.status ∉ (:first_order, :acceptable)
 
 """
     NCLSolve(ncl::NCLModel; kwargs...)
@@ -54,7 +54,7 @@ It could also be passed directly to one of the NCL subproblem solvers that are c
 
 The solver stops under the following circumstances:
 
-1. The norm of the residual variables falls below `feas_tol` and the dual feasibility residual, as reported by the subproblem solver, falls below `opt_tol`;
+1. The subproblem solver succeeds, the norm of the residual variables falls below `feas_tol` and the dual feasibility residual, as reported by the subproblem solver, falls below `opt_tol`;
 2. the maximum number of outer iterations `max_iter_NCL` is attained;
 3. the problem is found to be (locally) infeasible.
 
@@ -153,7 +153,8 @@ function NCLSolve(
     # solve subproblem
     subsolver(ncl, k, ω; x0 = xr, kwargs...)
 
-    failed(sub_stats) && @warn "subsolver returns with status " sub_stats.status
+    sub_failed = failed(sub_stats)
+    sub_failed && @warn "subsolver returns with status " sub_stats.status
 
     xr = sub_stats.solution
     x = xr[1:nx]
@@ -184,7 +185,8 @@ function NCLSolve(
       )
     end
 
-    if rNorm ≤ max(η, feas_tol)
+    # If the subsolver failed, r and dual_feas may be stale: treat the iteration as unsuccessful.
+    if !sub_failed && rNorm ≤ max(η, feas_tol)
       add_to_multipliers!(ncl, get_penalty_parameter(ncl), r)  # ncl.y .+= ncl.ρ .* r
       η = η / τ_η
       ω = ω / τ_ω
@@ -220,7 +222,7 @@ function NCLSolve(
       end
     end
 
-    converged = rNorm ≤ feas_tol && dual_feas ≤ opt_tol
+    converged = !sub_failed && rNorm ≤ feas_tol && dual_feas ≤ opt_tol
     tired = k ≥ max_iter_NCL
   end
 
