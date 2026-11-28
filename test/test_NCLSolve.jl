@@ -85,6 +85,17 @@ end
   @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5); atol = 1.0e-5)
 end
 
+@testset "primal_feas is the constraint violation at the solution" begin
+  f(x) = (x[1] - 2)^2 + (x[2] - 1)^2
+  c(x) = [x[1]^2 - x[2], x[1]^2 - x[2]]
+  model = ADNLPModel(f, [0.0, 0.0], [-10.0, -10.0], [10.0, 10.0], c, [-Inf, -Inf], [0.0, 0.0])
+  for max_iter_NCL in (1, 20)
+    stats = NCLSolve(model; max_iter_NCL = max_iter_NCL, verbose = false)
+    cx = cons(model, stats.solution)
+    @test stats.primal_feas ≈ maximum(max.(cx .- model.meta.ucon, 0))
+  end
+end
+
 @testset "Declare infeasibility at max penalty" begin
   # x is fixed at 0, while x + r == 100 forces a persistent residual r = 100.
   f(x) = zero(eltype(x))
