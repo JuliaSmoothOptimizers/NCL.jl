@@ -23,7 +23,7 @@ function test_NCLModel()
   lcon = [-0.5, -1.0, -Inf, 0.5]
   ucon = [Inf, 2.0, 0.5, 0.5]
   A = sparse([
-    1.0 -1.0;
+    1.0 -1.0
     1.0 -1.0
   ])
   c(x) = [
@@ -37,6 +37,12 @@ function test_NCLModel()
   ncl_nlin_res = NCLModel(nlp; resid = 1.0, ρ = 2.0, resid_linear = false, y = [1.0, 1.0])
 
   ncl_cons_res = NCLModel(nlp; resid = 1.0, resid_linear = true, y = [1.0, 1.0, 1.0, 1.0])
+
+  @testset "Default multipliers follow the constraint bounds" begin
+    # lcon = [-0.5, -1.0, -Inf, 0.5], ucon = [Inf, 2.0, 0.5, 0.5]; constraints 3 and 4 are nonlinear.
+    @test get_multipliers(NCLModel(nlp)) == [1.0, 0.0, -1.0, 0.0]
+    @test get_multipliers(NCLModel(nlp; resid_linear = false)) == [-1.0, 0.0]
+  end
 
   @testset "NCLModel. No linear residuals" begin
     @testset "NCLModel struct" begin

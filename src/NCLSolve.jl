@@ -249,7 +249,8 @@ function NCLSolve(
     dual_feas = dual_feas,
     objective = obj(nlp, x),
     elapsed_time = t,
-    multipliers = get_multipliers(ncl),
+    # NCL finds y with ∇φ - Jᵀy = 0 (φ = ±f); JSO solvers return y with ∇f + Jᵀy = 0.
+    multipliers = get_minimize(nlp) ? -get_multipliers(ncl) : copy(get_multipliers(ncl)),
     #! doesn't work... counters = nlp.counters,
     solver_specific = Dict(
       :internal_msg => converged ? :Solve_Succeeded : :Solve_Failed,
