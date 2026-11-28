@@ -85,7 +85,7 @@ end
   @test isapprox(stats.solution, [1.0, 2.0] / sqrt(5); atol = 1.0e-5)
 end
 
-# A subsolver that fails immediately and returns its initial point with zero dual residual.
+# A subsolver that fails immediately and returns its initial point with zero primal and dual residuals.
 mutable struct FailingSubSolver <: NCL.AbstractNCLSubSolver
   name::String
   stats::NCL.SolverCore.GenericExecutionStats
@@ -99,6 +99,7 @@ function (sub::FailingSubSolver)(ncl::NCLModel, outer_iter::Int, ω; x0 = get_x0
   stats = sub.stats
   NCL.SolverCore.set_status!(stats, :exception)
   NCL.SolverCore.set_solution!(stats, copy(x0))
+  NCL.SolverCore.set_primal_residual!(stats, 0.0)
   NCL.SolverCore.set_dual_residual!(stats, 0.0)
   NCL.SolverCore.set_iter!(stats, 0)
   return stats
